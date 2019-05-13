@@ -40,7 +40,7 @@ namespace Logic.Services
 
         public long? GetCurrentId => _vkApi.UserId;
 
-        public User GetCurrentUser() => _vkApi.Users.Get(new List<long> { GetCurrentId ?? 0 }, ProfileFields.FirstName | ProfileFields.PhotoMaxOrig | ProfileFields.LastName).FirstOrDefault();
+        public User GetCurrentUser(long? userId) => _vkApi.Users.Get(new List<long> { userId ?? GetCurrentId ?? 0 }, ProfileFields.FirstName | ProfileFields.PhotoMaxOrig | ProfileFields.LastName).FirstOrDefault();
 
     }
 }

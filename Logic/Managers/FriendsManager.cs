@@ -41,7 +41,7 @@ namespace Logic.Managers
                 var currentUserEntity = context.Users.FirstOrDefault(u => u.UserId == userId);
                 if (currentUserEntity == null)
                 {
-                    var vkUser = _vkApi.GetCurrentUser();
+                    var vkUser = _vkApi.GetCurrentUser(userId);
                     currentUserEntity = new User()
                     {
                         UserId = userId,
@@ -55,8 +55,10 @@ namespace Logic.Managers
 
                 entityUserId = currentUserEntity.Id;
                 var currentManyToMany = context.FriendsUserToUsers.Where(e => e.LeftUserId == currentUserEntity.Id);
-                context.RemoveRange(currentManyToMany);
-                context.SaveChanges();
+                var needSkip = false;
+                //context.RemoveRange(currentManyToMany);
+                //context.SaveChanges();
+                if (currentManyToMany.Count() == friends.Count || needSkip) return entityUserId;
 
                 foreach (var user in friends)
                 {
@@ -69,19 +71,22 @@ namespace Logic.Managers
                             FullName = $"{user.FirstName} {user.LastName}",
                             IsDeactivated = user.IsDeactivated,
                             LastCheck = DateTime.Now,
-                            //MuturalCount = user.MuturalCount,
                             PhotoUrl = user.PhotoMaxOrig?.ToString()
                         };
                         context.Users.Add(entityUser);
                         context.SaveChanges();
                     }
 
-                    context.FriendsUserToUsers.Add(new FriendsUserToUser
+                    if (!context.FriendsUserToUsers.Any(f =>
+                        f.RightUserId == entityUserId && f.LeftUserId == currentUserEntity.Id))
                     {
-                        LeftUserId = currentUserEntity.Id,
-                        RightUserId = entityUser.Id
-                    });
-                    context.SaveChanges();
+                        context.FriendsUserToUsers.Add(new FriendsUserToUser
+                        {
+                            LeftUserId = currentUserEntity.Id,
+                            RightUserId = entityUser.Id
+                        });
+                        context.SaveChanges();
+                    }
 
                     if (user.IsDeactivated || ((user.IsClosed ?? false) && (!(user.IsFriend ?? false))))
                     {
@@ -136,8 +141,13 @@ namespace Logic.Managers
             var i = 0;
             foreach (var friend in friends)
             {
+                var startTime = DateTime.Now;
+                
+                if (friend.IsDeactivated) continue;
+                Console.WriteLine($"Start parsing {friend.FirstName} {friend.LastName} at {startTime}");
                 UpdateFriendList(friend.Id);
                 i++;
+                Console.WriteLine($"Finish parsing {friend.FirstName} {friend.LastName} at {DateTime.Now}. Total time: {DateTime.Now - startTime}");
             }
 
             return i;
