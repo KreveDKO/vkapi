@@ -78,7 +78,7 @@ namespace Logic.Managers
                     }
 
                     if (!context.FriendsUserToUsers.Any(f =>
-                        f.RightUserId == entityUserId && f.LeftUserId == currentUserEntity.Id))
+                        f.RightUserId == entityUser.Id && f.LeftUserId == currentUserEntity.Id))
                     {
                         context.FriendsUserToUsers.Add(new FriendsUserToUser
                         {
