@@ -1,4 +1,5 @@
-﻿using Logic.Services;
+﻿using Logic.Managers;
+using Logic.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -26,7 +27,8 @@ namespace VkExperements
                 options.CheckConsentNeeded = context => true;
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             })
-                .AddTransient<VkApiService>();
+                .AddTransient<VkApiService>()
+                .AddScoped<FriendsManager>();
 
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);

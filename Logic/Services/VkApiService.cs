@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.Configuration;
 using VkNet;
 using VkNet.Enums.Filters;
@@ -31,10 +33,14 @@ namespace Logic.Services
 
         public VkCollection<User> GetFriends(long? userId = null)
         {
-            var friendsGetParams = new FriendsGetParams{UserId = userId,Fields = ProfileFields.All};
+            var friendsGetParams = new FriendsGetParams{UserId = userId,Fields = ProfileFields.FirstName | ProfileFields.PhotoMaxOrig | ProfileFields.LastName | ProfileFields.Blacklisted  };
            
             return _vkApi.Friends.Get(friendsGetParams);
         }
+
+        public long? GetCurrentId => _vkApi.UserId;
+
+        public User GetCurrentUser() => _vkApi.Users.Get(new List<long> { GetCurrentId ?? 0 }, ProfileFields.FirstName | ProfileFields.PhotoMaxOrig | ProfileFields.LastName).FirstOrDefault();
 
     }
 }
