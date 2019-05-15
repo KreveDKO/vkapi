@@ -27,8 +27,9 @@ namespace VkExperements
                 options.CheckConsentNeeded = context => true;
                 options.MinimumSameSitePolicy = SameSiteMode.None;
             })
-                .AddTransient<VkApiService>()
-                .AddScoped<FriendsManager>();
+                .AddScoped<VkApiService>()
+                .AddScoped<FriendsManager>()
+            .AddScoped<GraphManager>();
 
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);

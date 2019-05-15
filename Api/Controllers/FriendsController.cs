@@ -28,8 +28,8 @@ namespace Api.Controllers
             var userId = _friendsManager.UpdateFriendList(id ?? 0);
             //var result = _friendsManager.GetFriendsList(userId);
 
-            
-            
+
+
             return new JsonResult(userId);
         }
 
@@ -40,14 +40,8 @@ namespace Api.Controllers
             return new JsonResult(result);
         }
 
-        [HttpPost("list")]
-        public IActionResult GetFriends(long id = 0)
-        {
-            var result = _friendsManager.GetFriendsList(id);
-            return new JsonResult(result);
-        }
 
-        
+
 
         [HttpGet("getmatrix")]
         public IActionResult GetMatrix(long id = 0)
@@ -77,8 +71,9 @@ namespace Api.Controllers
                 graph = string.Join("\n", result.Select(e => string.Join(",", e)));
             }
 
-            
-            return new JsonResult(new {names, graph});
+
+            return new JsonResult(new { names, graph });
         }
+
     }
 }

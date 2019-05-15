@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using Core.DataContext;
 using Core.Entity;
+using Logic.Dto;
 using Logic.Services;
 using Remotion.Linq.Clauses.ResultOperators;
 using Remotion.Linq.Utilities;
@@ -55,12 +56,19 @@ namespace Logic.Managers
 
                 entityUserId = currentUserEntity.Id;
                 var currentManyToMany = context.FriendsUserToUsers.Where(e => e.LeftUserId == currentUserEntity.Id);
-                var needSkip = false;
+                var needSkip = friends.Count > 1500;
+                if (needSkip) Console.WriteLine($"{currentUserEntity.FullName} will skiped");
+                Console.WriteLine($"Total: {friends.Count}");
                 //context.RemoveRange(currentManyToMany);
                 //context.SaveChanges();
-                if (currentManyToMany.Count() == friends.Count || needSkip) return entityUserId;
-
-                foreach (var user in friends)
+                if (currentManyToMany.Count() >= friends.Count || needSkip) return entityUserId;
+                var newUsers = friends.Select(e => e.Id);
+                var newEntityUsers = context.Users.Where(e => newUsers.Contains(e.UserId)).Select(e => e.Id);
+                var existsM2M = context.FriendsUserToUsers.Where(e => e.LeftUserId == currentUserEntity.Id && newEntityUsers.Contains(e.RightUserId)).Select(e => e.RightUserId).ToList();
+                var existsUsers = context.Users.Where(e => existsM2M.Contains(e.Id)).Select(e => e.UserId).ToList();
+                newUsers = newUsers.Where(e => !existsUsers.Contains(e)).ToList();
+                var newFriends = friends.Where(f => newUsers.Contains(f.Id));
+                foreach (var user in newFriends)
                 {
                     var entityUser = context.Users.FirstOrDefault(u => u.UserId == user.Id);
                     if (entityUser == null)
@@ -88,7 +96,7 @@ namespace Logic.Managers
                         context.SaveChanges();
                     }
 
-                    if (user.IsDeactivated || ((user.IsClosed ?? false) && (!(user.IsFriend ?? false))))
+                    if (user.IsDeactivated || user.Blacklisted || ((user.IsClosed ?? false) && (!(user.IsFriend ?? false))))
                     {
                         continue;
                     }
@@ -97,7 +105,9 @@ namespace Logic.Managers
                     //var manyToMany = context.FriendsUserToUsers.Where(f => f.LeftUserId == entityUser.Id);
                     //context.FriendsUserToUsers.RemoveRange(manyToMany);
                     context.SaveChanges();
+                    var entityCount = context.FriendsUserToUsers.Count(e => e.LeftUserId == entityUser.Id);
                     var mutuaList = GetMappedUsersFriends(user.Id).Where(e => friendsIds.Contains(e.Id)).ToList();
+                    if (entityCount >= mutuaList.Count) continue;
                     foreach (var mutualUser in mutuaList)
                     {
                         var mutualEntityUser = context.Users.FirstOrDefault(u => u.UserId == mutualUser.Id);
@@ -112,11 +122,6 @@ namespace Logic.Managers
                                 PhotoUrl = mutualUser.PhotoMaxOrig?.ToString()
                             };
                             context.Users.Add(mutualEntityUser);
-                            context.SaveChanges();
-                        }
-                        else
-                        {
-                            mutualEntityUser.FullName = $"{mutualUser.FirstName} {mutualUser.LastName}";
                             context.SaveChanges();
                         }
                         if (context.FriendsUserToUsers.Any(e => e.LeftUserId == entityUser.Id && e.RightUserId == mutualEntityUser.Id)) continue;
@@ -152,29 +157,6 @@ namespace Logic.Managers
 
             return i;
 
-        }
-
-        public List<User> GetFriendsList(long userId)
-        {
-            
-            var result = new List<User>();
-            using (var context = new ApplicationContext())
-            {
-                var friends = context.FriendsUserToUsers.Where(f => f.LeftUserId == userId);
-                foreach (var friendsUserToUser in friends)
-                {
-                    var user = context.Users.FirstOrDefault(u => u.Id == friendsUserToUser.RightUserId);
-                    result.Add(user);
-                }
-
-                foreach (var user in result)
-                {
-                    var mutual = context.FriendsUserToUsers.Where(e => e.LeftUserId == user.Id).Select(e => e.RightUserId);
-                    user.MuturalFriend = context.Users.Where(u => mutual.Contains(u.Id)).ToList();
-                }
-                
-            }
-            return result;
         }
 
         private List<VkNet.Model.User> GetMappedUsersFriends(long id, IEnumerable<long> friendsIds =  null)
