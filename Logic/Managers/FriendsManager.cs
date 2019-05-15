@@ -55,35 +55,23 @@ namespace Logic.Managers
                 }
 
                 entityUserId = currentUserEntity.Id;
-                var currentManyToMany = context.FriendsUserToUsers.Where(e => e.LeftUserId == currentUserEntity.Id);
                 var needSkip = friends.Count > 1500;
                 if (needSkip) Console.WriteLine($"{currentUserEntity.FullName} will skiped");
                 Console.WriteLine($"Total: {friends.Count}");
-                //context.RemoveRange(currentManyToMany);
-                //context.SaveChanges();
-                if (currentManyToMany.Count() >= friends.Count || needSkip) return entityUserId;
-                var newUsers = friends.Select(e => e.Id);
-                var newEntityUsers = context.Users.Where(e => newUsers.Contains(e.UserId)).Select(e => e.Id);
-                var existsM2M = context.FriendsUserToUsers.Where(e => e.LeftUserId == currentUserEntity.Id && newEntityUsers.Contains(e.RightUserId)).Select(e => e.RightUserId).ToList();
-                var existsUsers = context.Users.Where(e => existsM2M.Contains(e.Id)).Select(e => e.UserId).ToList();
-                newUsers = newUsers.Where(e => !existsUsers.Contains(e)).ToList();
-                var newFriends = friends.Where(f => newUsers.Contains(f.Id));
-                foreach (var user in newFriends)
+
+                var removedUsers = RemovedUsers(context, currentUserEntity.Id, friends);
+                context.RemoveRange(removedUsers);
+                Console.WriteLine($"Removed users: {removedUsers.Count()}");
+
+                var newUsers = NewUsers(context, currentUserEntity.Id, friends);
+                Console.WriteLine($"New users: {newUsers.Count}");
+
+                if (newUsers.Count == 0 || needSkip) return entityUserId;
+                UpdateEntityUsers(context, newUsers);
+
+                foreach (var user in newUsers)
                 {
-                    var entityUser = context.Users.FirstOrDefault(u => u.UserId == user.Id);
-                    if (entityUser == null)
-                    {
-                        entityUser = new User
-                        {
-                            UserId = user.Id,
-                            FullName = $"{user.FirstName} {user.LastName}",
-                            IsDeactivated = user.IsDeactivated,
-                            LastCheck = DateTime.Now,
-                            PhotoUrl = user.PhotoMaxOrig?.ToString()
-                        };
-                        context.Users.Add(entityUser);
-                        context.SaveChanges();
-                    }
+                    var entityUser = context.Users.First(u => u.UserId == user.Id);
 
                     if (!context.FriendsUserToUsers.Any(f =>
                         f.RightUserId == entityUser.Id && f.LeftUserId == currentUserEntity.Id))
@@ -102,13 +90,15 @@ namespace Logic.Managers
                     }
 
                     //Todo: обработать сценарий удаления пользователя, кроме как парсить все связи
-                    //var manyToMany = context.FriendsUserToUsers.Where(f => f.LeftUserId == entityUser.Id);
-                    //context.FriendsUserToUsers.RemoveRange(manyToMany);
-                    context.SaveChanges();
-                    var entityCount = context.FriendsUserToUsers.Count(e => e.LeftUserId == entityUser.Id);
-                    var mutuaList = GetMappedUsersFriends(user.Id).Where(e => friendsIds.Contains(e.Id)).ToList();
-                    if (entityCount >= mutuaList.Count) continue;
-                    foreach (var mutualUser in mutuaList)
+                    
+                    var mutualFriends = GetMappedUsersFriends(user.Id).Where(e => friendsIds.Contains(e.Id)).ToList();
+
+                    //var removedMutualUsers = RemovedUsers(context, entityUser.Id, mutualFriends);
+                    var newMutualUsers = NewUsers(context, entityUser.Id, mutualFriends);
+
+                    if (newMutualUsers.Count() == 0) continue;
+                    
+                    foreach (var mutualUser in newMutualUsers)
                     {
                         var mutualEntityUser = context.Users.FirstOrDefault(u => u.UserId == mutualUser.Id);
                         if (mutualEntityUser == null)
@@ -138,6 +128,48 @@ namespace Logic.Managers
             }
 
             return entityUserId;
+        }
+
+        private void UpdateEntityUsers(ApplicationContext context, List<VkNet.Model.User> newUsers)
+        {
+            var allUsers = context.Users;
+            newUsers = newUsers.Where(nu => allUsers.Any(u => u.UserId == nu.Id)).ToList();
+            foreach (var user in newUsers)
+            {
+                context.Users.Add(new User
+                {
+                    UserId = user.Id,
+                    FullName = $"{user.FirstName} {user.LastName}",
+                    IsDeactivated = user.IsDeactivated,
+                    LastCheck = DateTime.Now,
+                    PhotoUrl = user.PhotoMaxOrig?.ToString()
+                });
+                
+            }
+            context.SaveChanges();
+        }
+
+        private List<VkNet.Model.User> NewUsers(ApplicationContext context, long userId, List<VkNet.Model.User> users)
+        {
+            var newUsers = users.Select(e => e.Id);
+            var newEntityUsers = context.Users.Where(e => newUsers.Contains(e.UserId)).Select(e => e.Id);
+            var existsM2M = context.FriendsUserToUsers.Where(e => e.LeftUserId == userId && newEntityUsers.Contains(e.RightUserId)).Select(e => e.RightUserId).ToList();
+            var existsUsers = context.Users.Where(e => existsM2M.Contains(e.Id)).Select(e => e.UserId).ToList();
+            newUsers = newUsers.Where(e => !existsUsers.Contains(e)).ToList();
+            return users.Where(f => newUsers.Contains(f.Id)).ToList();
+        }
+
+        private IQueryable<FriendsUserToUser> RemovedUsers(ApplicationContext context, long userId, List<VkNet.Model.User> users)
+        {
+
+            var result = new List<long>();
+
+            var newUsersIds = users.Select(e => e.Id);
+            var newEntityUsers = context.Users.Where(u => newUsersIds.Contains(u.UserId)).Select(u => u.Id).ToList();
+            var removed = context.FriendsUserToUsers.Where(e => e.LeftUserId == userId && !newEntityUsers.Contains(e.RightUserId));
+
+            return removed;
+
         }
 
         public int UpdateAllFriendList(long userId)
