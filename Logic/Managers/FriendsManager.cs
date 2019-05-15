@@ -95,36 +95,24 @@ namespace Logic.Managers
 
                     //var removedMutualUsers = RemovedUsers(context, entityUser.Id, mutualFriends);
                     var newMutualUsers = NewUsers(context, entityUser.Id, mutualFriends);
-
-                    if (newMutualUsers.Count() == 0) continue;
+                    UpdateEntityUsers(context, newMutualUsers);
+                    if (newMutualUsers.Count == 0) continue;
                     
                     foreach (var mutualUser in newMutualUsers)
                     {
-                        var mutualEntityUser = context.Users.FirstOrDefault(u => u.UserId == mutualUser.Id);
-                        if (mutualEntityUser == null)
-                        {
-                            mutualEntityUser = new User
-                            {
-                                UserId = mutualUser.Id,
-                                FullName = $"{mutualUser.FirstName} {mutualUser.LastName}",
-                                IsDeactivated = mutualUser.IsDeactivated,
-                                LastCheck = DateTime.Now,
-                                PhotoUrl = mutualUser.PhotoMaxOrig?.ToString()
-                            };
-                            context.Users.Add(mutualEntityUser);
-                            context.SaveChanges();
-                        }
+                        var mutualEntityUser = context.Users.First(u => u.UserId == mutualUser.Id);
                         if (context.FriendsUserToUsers.Any(e => e.LeftUserId == entityUser.Id && e.RightUserId == mutualEntityUser.Id)) continue;
-                        context.Add(new FriendsUserToUser()
+                        context.FriendsUserToUsers.Add(new FriendsUserToUser()
                         {
                             LeftUserId = entityUser.Id,
                             RightUserId = mutualEntityUser.Id
                         });
 
                     }
-                    context.SaveChanges();
+                    
                     
                 }
+                context.SaveChanges();
             }
 
             return entityUserId;
@@ -133,7 +121,7 @@ namespace Logic.Managers
         private void UpdateEntityUsers(ApplicationContext context, List<VkNet.Model.User> newUsers)
         {
             var allUsers = context.Users;
-            newUsers = newUsers.Where(nu => allUsers.Any(u => u.UserId == nu.Id)).ToList();
+            newUsers = newUsers.Where(nu => allUsers.All(u => u.UserId != nu.Id)).ToList();
             foreach (var user in newUsers)
             {
                 context.Users.Add(new User
