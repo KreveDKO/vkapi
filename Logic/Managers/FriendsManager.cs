@@ -32,7 +32,7 @@ namespace Logic.Managers
         {
             if (userId == 0) userId = CurrentUser;
             if (userId == 0) return 0;
-            
+
             var friends = GetMappedUsersFriends(userId);
             var friendsIds = friends.Select(f => f.Id);
             long entityUserId = 0;
@@ -48,7 +48,8 @@ namespace Logic.Managers
                         UserId = userId,
                         IsDeactivated = false,
                         PhotoUrl = vkUser?.PhotoMaxOrig?.ToString(),
-                        FullName = $"{vkUser?.FirstName} {vkUser?.LastName}"
+                        FullName = $"{vkUser?.FirstName} {vkUser?.LastName}",
+                        MuturalCount =  friends.Count
                     };
                     context.Add(currentUserEntity);
                     context.SaveChanges();
@@ -66,13 +67,13 @@ namespace Logic.Managers
                 var newUsers = NewUsers(context, currentUserEntity.Id, friends);
                 Console.WriteLine($"New users: {newUsers.Count}");
 
-                if (newUsers.Count == 0 || needSkip) return entityUserId;
+                if (needSkip) return entityUserId;
                 UpdateEntityUsers(context, newUsers);
 
-                foreach (var user in newUsers)
+                foreach (var user in friends)
                 {
                     var entityUser = context.Users.First(u => u.UserId == user.Id);
-
+                    if (entityUser.MuturalCount > 0 && context.FriendsUserToUsers.Count(c => c.RightUserId == entityUser.Id) == entityUser.MuturalCount) continue;
                     if (!context.FriendsUserToUsers.Any(f =>
                         f.RightUserId == entityUser.Id && f.LeftUserId == currentUserEntity.Id))
                     {
@@ -88,29 +89,35 @@ namespace Logic.Managers
                     {
                         continue;
                     }
-
-                    //Todo: обработать сценарий удаления пользователя, кроме как парсить все связи
-                    
-                    var mutualFriends = GetMappedUsersFriends(user.Id).Where(e => friendsIds.Contains(e.Id)).ToList();
-
+                    var mutualFriends = GetMappedUsersFriends(user.Id).ToList();
+                    if (entityUser.MuturalCount == mutualFriends.Count) continue; 
+                    Console.WriteLine($"Update ${user.FirstName} {user.LastName} ({user.Id}) Total: {mutualFriends.Count}");
+                    entityUser.MuturalCount = mutualFriends.Count;
                     //var removedMutualUsers = RemovedUsers(context, entityUser.Id, mutualFriends);
                     var newMutualUsers = NewUsers(context, entityUser.Id, mutualFriends);
                     UpdateEntityUsers(context, newMutualUsers);
                     if (newMutualUsers.Count == 0) continue;
-                    
+
                     foreach (var mutualUser in newMutualUsers)
                     {
                         var mutualEntityUser = context.Users.First(u => u.UserId == mutualUser.Id);
-                        if (context.FriendsUserToUsers.Any(e => e.LeftUserId == entityUser.Id && e.RightUserId == mutualEntityUser.Id)) continue;
-                        context.FriendsUserToUsers.Add(new FriendsUserToUser()
-                        {
-                            LeftUserId = entityUser.Id,
-                            RightUserId = mutualEntityUser.Id
-                        });
+                        if (!context.FriendsUserToUsers.Any(e => e.LeftUserId == entityUser.Id && e.RightUserId == mutualEntityUser.Id))
+                            context.FriendsUserToUsers.Add(new FriendsUserToUser()
+                            {
+                                LeftUserId = entityUser.Id,
+                                RightUserId = mutualEntityUser.Id
+                            });
+                        if (!context.FriendsUserToUsers.Any(e => e.RightUserId == entityUser.Id && e.LeftUserId == mutualEntityUser.Id))
+                            context.FriendsUserToUsers.Add(new FriendsUserToUser()
+                            {
+                                RightUserId = entityUser.Id,
+                                LeftUserId = mutualEntityUser.Id
+                            });
 
                     }
-                    
-                    
+                    context.SaveChanges();
+
+
                 }
                 context.SaveChanges();
             }
@@ -132,7 +139,7 @@ namespace Logic.Managers
                     LastCheck = DateTime.Now,
                     PhotoUrl = user.PhotoMaxOrig?.ToString()
                 });
-                
+
             }
             context.SaveChanges();
         }
@@ -140,8 +147,8 @@ namespace Logic.Managers
         private List<VkNet.Model.User> NewUsers(ApplicationContext context, long userId, List<VkNet.Model.User> users)
         {
             var newUsers = users.Select(e => e.Id);
-            var newEntityUsers = context.Users.Where(e => newUsers.Contains(e.UserId)).Select(e => e.Id);
-            var existsM2M = context.FriendsUserToUsers.Where(e => e.LeftUserId == userId && newEntityUsers.Contains(e.RightUserId)).Select(e => e.RightUserId).ToList();
+
+            var existsM2M = context.FriendsUserToUsers.Where(e => e.LeftUserId == userId/*).ToList().Where(e =>*/ && newUsers.Contains(e.RightUser.UserId)).Select(e => e.RightUserId).ToList();
             var existsUsers = context.Users.Where(e => existsM2M.Contains(e.Id)).Select(e => e.UserId).ToList();
             newUsers = newUsers.Where(e => !existsUsers.Contains(e)).ToList();
             return users.Where(f => newUsers.Contains(f.Id)).ToList();
@@ -164,10 +171,11 @@ namespace Logic.Managers
         {
             var friends = GetMappedUsersFriends(userId);
             var i = 0;
+            UpdateFriendList(userId);
             foreach (var friend in friends)
             {
                 var startTime = DateTime.Now;
-                
+
                 if (friend.IsDeactivated) continue;
                 Console.WriteLine($"Start parsing {friend.FirstName} {friend.LastName} at {startTime}");
                 UpdateFriendList(friend.Id);
@@ -179,7 +187,7 @@ namespace Logic.Managers
 
         }
 
-        private List<VkNet.Model.User> GetMappedUsersFriends(long id, IEnumerable<long> friendsIds =  null)
+        private List<VkNet.Model.User> GetMappedUsersFriends(long id, IEnumerable<long> friendsIds = null)
         {
             return _vkApi.GetFriends(id)/*.Select(f => new User()
             {

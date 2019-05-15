@@ -10,7 +10,7 @@ namespace Core.Entity
         public string FullName { get; set; }
         public string PhotoUrl { get; set; }
         public int MuturalCount { get; set; }
-        public List<User> MuturalFriend { get; set; }
+        public virtual  List<User> MuturalFriend { get; set; }
         public long UserId { get; set; }
         public DateTime LastCheck { get; set; }
 

@@ -52,7 +52,7 @@ namespace Logic.Managers
             using (var context = new ApplicationContext())
             {
 
-                result = context.Users.Where(e => e.UserId == 477263841 || links.Any(n => n.Source == e.Id || n.Target == e.Id )).Select(u => new Node() { Id = u.Id, User = u.FullName, Description = u.PhotoUrl, UserId = u.UserId }).ToList();
+                result = context.Users.Where(e => links.Any(n => n.Source == e.Id || n.Target == e.Id )).Select(u => new Node() { Id = u.Id, User = u.FullName, Description = u.PhotoUrl, UserId = u.UserId }).ToList();
 
             }
             return result;
