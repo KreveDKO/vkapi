@@ -13,5 +13,10 @@ namespace Api.Controllers
             ViewBag.UserId = id;
             return View();
         }
+        public IActionResult VivaGraph(int id = 1)
+        {
+            ViewBag.UserId = id;
+            return View();
+        }
     }
 }
