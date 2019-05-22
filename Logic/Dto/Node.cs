@@ -20,5 +20,8 @@ namespace Logic.Dto
         [JsonProperty("userid")]
         public long UserId { get; set; }
 
+        [JsonProperty("isactive")]
+        public bool IsActive { get; set; }
+
     }
 }

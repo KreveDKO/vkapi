@@ -18,9 +18,12 @@ namespace Api.Controllers
             _graphManager = graphManager;
         }
 
+        [HttpGet("getfriends")]
         public IActionResult GetFriends(long userId)
         {
-            return new JsonResult("");
+            var links = _graphManager.GetFriends(userId);
+            var nodes = _graphManager.GetUserNodes(links);
+            return new JsonResult(new { nodes, links });
         }
         [HttpGet("getgraph")]
         public IActionResult GetGraph(long userId = 0)

@@ -1,10 +1,10 @@
-﻿<!DOCTYPE html>
+﻿@*<!DOCTYPE html>
     <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
         <title>VivaGraphs WebGL test page</title>
         <script src="~/lib/vivagraph/vivagraph.min.js"></script>
-
+        <script src="~/lib/jquery/dist/jquery.min.js"></script>
         <script src="~/js/graph.js"></script>
         <style type='text/css'>
             body {
@@ -21,6 +21,34 @@
         </style>
     </head>
     <body onload="onLoad()">
-
+        <div id="scene"></div>
     </body>
-    </html>
+    </html>*@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>VivaGraphs SVG circle images</title>
+    <script src="~/lib/vivagraph/vivagraph.min.js"></script>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/js/graph.js"></script>
+    <style type='text/css'>
+        body,
+        svg,
+        #graph-container {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            overflow: hidden;
+            margin: 0px;
+        }
+    </style>
+</head>
+
+<body onload="onLoad()">
+    <div id="graph-container"></div>
+</body>
+
+</html>

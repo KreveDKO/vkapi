@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Core.DataContext;
 using Core.Entity;
+using Logic.Dto;
 using Logic.Managers;
 using Logic.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -20,6 +21,23 @@ namespace Api.Controllers
         {
             _vkApi = vkApiService;
             _friendsManager = friendsManager;
+        }
+
+        [HttpGet("getself")]
+        public IActionResult GetSelf()
+        {
+            var self = _vkApi.GetCurrentUser(null);
+            return new JsonResult(new Node() { User = $"{self.LastName} {self.FirstName}", Id = self.Id,Description = self.Photo50.ToString(),IsActive = true });
+        }
+
+        [HttpGet("vkfirends")]
+        public IActionResult GetFriends(long id)
+        {
+            var friends = _vkApi.GetFriends(id);
+            var links = friends.Select(e => new Link { Source = id, Target = e.Id});
+            var nodes = friends.Select(f => new Node() { Id = f.Id, User = $"{f.LastName} {f.FirstName}", Description = f.Photo50?.ToString(), IsActive = !(f.IsDeactivated  || (f.IsClosed ?? false) || f.Blacklisted)});
+            return new JsonResult(new { links , nodes });
+            
         }
 
         [HttpPost("init")]
@@ -39,9 +57,6 @@ namespace Api.Controllers
             var result = _friendsManager.UpdateAllFriendList(id);
             return new JsonResult(result);
         }
-
-
-
 
         [HttpGet("getmatrix")]
         public IActionResult GetMatrix(long id = 0)

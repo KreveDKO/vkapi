@@ -33,6 +33,17 @@ namespace Logic.Managers
             return result;
         }
 
+        public List<Link> GetFriends(long userId)
+        {
+            var result = new List<Link>();
+            using (var context  = new ApplicationContext())
+            {
+                result = context.FriendsUserToUsers.Where(e => e.LeftUserId == userId).Select(e => new Link() {Source = e.LeftUserId, Target = e.RightUserId }).ToList();
+                
+            }
+            return result;
+        }
+
         public List<Link> GetUserLinks(long userId)
         {
             var result = new List<Link>();
