@@ -29,6 +29,9 @@ namespace VkExperements
             })
                 .AddScoped<VkApiService>()
                 .AddScoped<FriendsManager>()
+                .AddScoped<MessageManager>()
+                .AddScoped<UserManager>()
+
             .AddScoped<GraphManager>();
 
 

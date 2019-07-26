@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -22,7 +23,7 @@ namespace Api.Controllers
 
         public void Token(string access_token)
         {
-            
+            SignIn(User, "VkAuth");            
         }
     }
 }

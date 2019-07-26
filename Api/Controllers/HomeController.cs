@@ -20,5 +20,11 @@ namespace Api.Controllers
             ViewBag.UserId = id;
             return View();
         }
+
+        [Route("NoServerNoServer")]
+        public IActionResult NoServer()
+        {
+            return View();
+        }
     }
 }

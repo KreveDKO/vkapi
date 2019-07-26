@@ -10,8 +10,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Core.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20190515072815_ForeignKeys")]
-    partial class ForeignKeys
+    [Migration("20190726064619_AddMessages")]
+    partial class AddMessages
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -37,6 +37,28 @@ namespace Core.Migrations
                     b.HasIndex("RightUserId");
 
                     b.ToTable("FriendsUserToUsers");
+                });
+
+            modelBuilder.Entity("Core.Entity.Message", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd();
+
+                    b.Property<long>("DialogId");
+
+                    b.Property<long>("ExternalId");
+
+                    b.Property<string>("Text");
+
+                    b.Property<string>("Title");
+
+                    b.Property<long>("UserId");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Messages");
                 });
 
             modelBuilder.Entity("Core.Entity.User", b =>
@@ -73,6 +95,14 @@ namespace Core.Migrations
                     b.HasOne("Core.Entity.User", "RightUser")
                         .WithMany()
                         .HasForeignKey("RightUserId")
+                        .OnDelete(DeleteBehavior.Cascade);
+                });
+
+            modelBuilder.Entity("Core.Entity.Message", b =>
+                {
+                    b.HasOne("Core.Entity.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade);
                 });
 
