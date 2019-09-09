@@ -125,11 +125,11 @@ namespace Logic.Managers
 
             return entityUserId;
         }
-        public void UpdatePublicList()
+        public void UpdatePublicList(long? userId = null)
         {
             using (var context = new ApplicationContext())
             {
-                var friends = _vkApi.GetFriends();
+                var friends = _vkApi.GetFriends(userId);
                 var top = new Dictionary<Group, int>();
                 foreach (var friend in friends)
                 {

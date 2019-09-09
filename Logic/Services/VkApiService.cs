@@ -112,14 +112,21 @@ namespace Logic.Services
         public List<Group> GetPublics(long userId)
         {
             var result = new List<Group>();
-            var subscriptions = _vkApi.Users.GetSubscriptions(userId,200,null, GroupsFields.All);
-            var count = 0;
-            var total = (int)subscriptions.TotalCount;
-            while (subscriptions.Any())
+            try
             {
-                count += subscriptions.Count;
-                result.AddRange(subscriptions);
-                subscriptions = _vkApi.Users.GetSubscriptions(userId, 200,count, GroupsFields.All);
+                var subscriptions = _vkApi.Users.GetSubscriptions(userId, 200, null, GroupsFields.All);
+                var count = 0;
+                var total = (int)subscriptions.TotalCount;
+                while (subscriptions.Any())
+                {
+                    count += subscriptions.Count;
+                    result.AddRange(subscriptions);
+                    subscriptions = _vkApi.Users.GetSubscriptions(userId, 200, count, GroupsFields.All);
+                }
+            }
+            catch (Exception ex)
+            {
+
             }
             return result;
         }
