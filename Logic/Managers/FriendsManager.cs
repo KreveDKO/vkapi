@@ -9,6 +9,7 @@ using Logic.Services;
 using Remotion.Linq.Clauses.ResultOperators;
 using Remotion.Linq.Utilities;
 using VkNet;
+using VkNet.Enums.SafetyEnums;
 using VkNet.Model;
 using User = Core.Entity.User;
 
@@ -49,7 +50,7 @@ namespace Logic.Managers
                         IsDeactivated = false,
                         PhotoUrl = vkUser?.PhotoMaxOrig?.ToString(),
                         FullName = $"{vkUser?.FirstName} {vkUser?.LastName}",
-                        MuturalCount =  friends.Count
+                        MuturalCount = friends.Count
                     };
                     context.Add(currentUserEntity);
                     context.SaveChanges();
@@ -90,7 +91,7 @@ namespace Logic.Managers
                         continue;
                     }
                     var mutualFriends = GetMappedUsersFriends(user.Id).ToList();
-                    if (entityUser.MuturalCount == mutualFriends.Count) continue; 
+                    if (entityUser.MuturalCount == mutualFriends.Count) continue;
                     Console.WriteLine($"Update ${user.FirstName} {user.LastName} ({user.Id}) Total: {mutualFriends.Count}");
                     entityUser.MuturalCount = mutualFriends.Count;
                     //var removedMutualUsers = RemovedUsers(context, entityUser.Id, mutualFriends);
@@ -124,7 +125,47 @@ namespace Logic.Managers
 
             return entityUserId;
         }
+        public void UpdatePublicList()
+        {
+            using (var context = new ApplicationContext())
+            {
+                var friends = _vkApi.GetFriends();
+                var top = new Dictionary<Group, int>();
+                foreach (var friend in friends)
+                {
+                    var user = context.Users.First(u => u.UserId == friend.Id);
+                    var result = _vkApi.GetPublics(friend.Id);
+                    var pages = result.Where(p => p.Type == GroupType.Page || p.Type == GroupType.Group);
+                    foreach (var page in pages)
+                    {
+                        var group = context.UserGroups.FirstOrDefault(g => g.GroupId == page.Id);
+                        if (group == null)
+                        {
+                            group = new UserGroup()
+                            {
+                                GroupType = page.Type ==  GroupType.Group ? 0 : 1,
+                                GroupId = page.Id,
+                                Title = page.Name,
+                                IsDeactivated = page.IsClosed == VkNet.Enums.GroupPublicity.Closed
+                            };
+                            context.Add(group);
+                            context.SaveChanges();
+                        }
+                        if (context.UserToUserGroup.Any(m2m => m2m.UserId == user.Id && m2m.UserGroupId == group.Id))
+                        {
+                            continue;
+                        }
+                        context.UserToUserGroup.Add(new UserToUserGroup()
+                        {
+                            User = user,
+                            UserGroup = group
+                        });
+                    }
+                    context.SaveChanges();
+                }
+            }
 
+        }
         private void UpdateEntityUsers(ApplicationContext context, List<VkNet.Model.User> newUsers)
         {
             var allUsers = context.Users;

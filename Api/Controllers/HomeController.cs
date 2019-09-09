@@ -10,6 +10,7 @@ namespace Api.Controllers
     {
         public IActionResult Index(int id = 1)
         {
+            return Content("");
             ViewBag.UserId = id;
             return View();
         }

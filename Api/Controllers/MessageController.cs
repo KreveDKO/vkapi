@@ -28,6 +28,7 @@ namespace Api.Controllers
             var dialogs = _vkApiService.GetDialogs();
             foreach (var dialog in dialogs)
             {
+                Console.WriteLine(dialog);
                 result.AddRange(_vkApiService.GetMessages(dialog));
             }
             

@@ -51,6 +51,17 @@ namespace Api.Controllers
             return new JsonResult(userId);
         }
 
+        [HttpPost("initgroups")]
+        public IActionResult InitFriendsPublics(long? id)
+        {
+            _friendsManager.UpdatePublicList();
+            //var result = _friendsManager.GetFriendsList(userId);
+
+
+
+            return new JsonResult("");
+        }
+
         [HttpPost("fullinit")]
         public IActionResult GetAllFriends(long id = 0)
         {

@@ -23,8 +23,18 @@ namespace Logic.Managers
             //var entityUser = context.Users.FirstOrDefault(u => u.UserId == userId);
             entityUser.FullName = $"{vkUser?.FirstName} {vkUser?.LastName}";
             entityUser.PhotoUrl = vkUser?.PhotoMaxOrig?.ToString();
-            context.SaveChanges();
+            
         }
+
+        void UpdateConversationuser(User entityUser, ApplicationContext context)
+        {
+
+            var conversation = _vkApiService.GetConversation(entityUser.UserId);
+            entityUser.FullName = conversation.ChatSettings.Title;
+            context.SaveChanges();
+
+        }
+
         public void UpdateUsers()
         {
             using (var context = new ApplicationContext())
@@ -34,12 +44,27 @@ namespace Logic.Managers
                 {
                     try
                     {
-                        UpdateUser(user, context);
+                        if (user.UserId > 2000000000)
+                        {
+                            UpdateConversationuser(user, context);
+                        }
+                        else if (user.UserId < 0)
+                        {
+
+                        }
+                        else{
+                            UpdateUser(user, context);
+                        }
+                        
                     }
-                    catch { }
+                    catch (Exception e) {
+                        Console.WriteLine(e.Message);
+                    }
                     
                 }
+                context.SaveChanges();
             }
+            
         }
     }
 }

@@ -34,6 +34,7 @@ namespace Logic.Services
             var services = new ServiceCollection();
             services.AddAudioBypass();
             _vkApi = new VkApi(services);
+            //_vkApi.RequestsPerSecond = 3;
             _vkApi.Authorize(authParams);
 
         }
@@ -48,6 +49,9 @@ namespace Logic.Services
         public long? GetCurrentId => _vkApi.UserId;
 
         public User GetCurrentUser(long? userId) => _vkApi.Users.Get(new List<long> { userId ?? GetCurrentId ?? 0 }, ProfileFields.FirstName | ProfileFields.PhotoMaxOrig | ProfileFields.LastName | ProfileFields.Photo50).FirstOrDefault();
+
+        public Conversation GetConversation(long userId) => _vkApi.Messages.GetConversationsById(new List<long> { userId }, new List<string>()).Items.FirstOrDefault();
+        
 
         public List<Message> GetMessages(long userId)
         {
@@ -105,6 +109,20 @@ namespace Logic.Services
             return result;
         }
 
+        public List<Group> GetPublics(long userId)
+        {
+            var result = new List<Group>();
+            var subscriptions = _vkApi.Users.GetSubscriptions(userId,200,null, GroupsFields.All);
+            var count = 0;
+            var total = (int)subscriptions.TotalCount;
+            while (subscriptions.Any())
+            {
+                count += subscriptions.Count;
+                result.AddRange(subscriptions);
+                subscriptions = _vkApi.Users.GetSubscriptions(userId, 200,count, GroupsFields.All);
+            }
+            return result;
+        }
 
     }
 }

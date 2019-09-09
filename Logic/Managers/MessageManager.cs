@@ -27,9 +27,10 @@ namespace Logic.Managers
                 return;
             }
             var ids = messages.Select(m => m.Id ?? 0);
+            var attachments = messages.Where(m => m.Attachments.Any()).SelectMany(m => m.Attachments.Select(a => new Attachment() { ExternalMessageId = m.Id ?? 0, ExternalId = a.Instance.Id ?? 0, Type = a.Type.Name}));
             using (var context = new ApplicationContext())
             {
-                var existsMessagesIds = context.Messages.Where(e => ids.Contains(e.ExternalId)).Select(e => e.ExternalId).ToList();
+                var existsMessagesIds = context.Messages.Where(e => ids.Contains(e.ExternalId)).Select(e => e.ExternalId).ToList();              
                 var newMessages = messages.Where(e => !existsMessagesIds.Contains(e.Id ?? 0));
                 if (!newMessages.Any())
                 {
