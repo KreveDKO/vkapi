@@ -6,6 +6,6 @@ WHERE 1 =1
 AND u."Id" IN (SELECT "RightUserId" FROM "Users"
 			  JOIN "FriendsUserToUsers"
 			  ON "Users"."Id" = "FriendsUserToUsers"."LeftUserId"
-			  WHERE "Users"."UserId" = 263667943)
+			  WHERE "Users"."UserId" = 159878742)
 AND LOWER(gr."Title") like '%%' 
-ORDER BY gr."GroupId";
+ORDER BY gr."GroupId" DESC;

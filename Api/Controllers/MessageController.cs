@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Logic.Managers;
 using Logic.Services;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
@@ -13,12 +10,11 @@ namespace Api.Controllers
     [ApiController]
     public class MessageController : Controller
     {
-        VkApiService _vkApiService;
-        UserManager _userManager;
-        public MessageController(VkApiService vkApiService, UserManager userManager)
+        private readonly VkApiService _vkApiService;
+        
+        public MessageController(VkApiService vkApiService)
         {
-            _vkApiService = vkApiService;
-            _userManager = userManager;
+            _vkApiService = vkApiService; ;
         }
 
         [HttpGet("messages")]
@@ -33,12 +29,6 @@ namespace Api.Controllers
             }
             
             return new JsonResult(result);
-        }
-        [HttpGet("update")]
-        public IActionResult UpdateUsers()
-        {
-            _userManager.UpdateUsers();
-            return new JsonResult("");
         }
     }
 }

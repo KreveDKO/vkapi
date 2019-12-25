@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Core.Entity
+﻿namespace Core.Entity
 {
     public class UserGroup
     {
