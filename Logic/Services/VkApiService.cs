@@ -68,7 +68,7 @@ namespace Logic.Services
                 Offset = 0
             };
             var getResult = _vkApi.Messages.GetHistory(@params);
-            if (_messageManager.CheckTotallCount(userId, getResult.TotalCount))
+            if (_messageManager.CheckTotalCount(userId, getResult.TotalCount))
             {
                 return result;
             }

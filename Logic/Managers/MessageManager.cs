@@ -8,7 +8,7 @@ namespace Logic.Managers
 {
     public class MessageManager
     {
-        public bool CheckTotallCount(long userId, uint count)
+        public bool CheckTotalCount(long userId, uint count)
         {
             bool result;
             using (var context = new ApplicationContext())
