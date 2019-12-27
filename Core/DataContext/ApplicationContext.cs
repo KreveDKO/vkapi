@@ -5,11 +5,10 @@ namespace Core.DataContext
 {
     public class ApplicationContext : DbContext
     {
-
-        public DbSet<User> Users { get; set; }
+        public DbSet<VkUser> Users { get; set; }
         public DbSet<FriendsUserToUser> FriendsUserToUsers { get; set; }
 
-        public DbSet<Message> Messages { get; set; }
+        public DbSet<VkMessage> Messages { get; set; }
 
         public DbSet<UserGroup> UserGroups { get; set; }
         public DbSet<UserToUserGroup> UserToUserGroup { get; set; }

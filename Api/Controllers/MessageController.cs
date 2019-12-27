@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using Logic.Managers;
 using Logic.Services;
 using Microsoft.AspNetCore.Mvc;
+using VkNet.Model;
 
 namespace Api.Controllers
 {
@@ -20,7 +20,7 @@ namespace Api.Controllers
         [HttpGet("messages")]
         public IActionResult GetMessages()
         {
-            var result = new List<VkNet.Model.Message>();
+            var result = new List<Message>();
             var dialogs = _vkApiService.GetDialogs();
             foreach (var dialog in dialogs)
             {

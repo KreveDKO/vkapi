@@ -8,7 +8,7 @@ namespace Core.Entity
 
         [ForeignKey("User")]
         public long UserId { get; set; }
-        public virtual User User { get; set; }
+        public virtual VkUser User { get; set; }
 
         [ForeignKey("UserGroup")]
         public long UserGroupId { get; set; }

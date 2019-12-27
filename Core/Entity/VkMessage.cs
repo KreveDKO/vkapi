@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Core.Entity
 {
-    public class Message
+    public class VkMessage
     {
 
         public long Id { get; set; }
@@ -15,7 +15,7 @@ namespace Core.Entity
         [ForeignKey("User")]
         public long UserId { get; set; }
 
-        public virtual User User { get; set; }
+        public virtual VkUser User { get; set; }
         /// <summary>
         /// Внешний идентификатор сообщения
         /// </summary>

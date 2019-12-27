@@ -1,8 +1,6 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using Logic.Dto;
 using Logic.Managers;
-using Logic.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers
@@ -10,12 +8,10 @@ namespace Api.Controllers
     [Route("/api/[controller]")]
     public class UpdateController : Controller
     {
-        private readonly VkApiService _vkApiService;
         private readonly UpdateManager _updateManager;
 
-        public UpdateController(VkApiService vkApiService, UpdateManager updateManager)
+        public UpdateController(UpdateManager updateManager)
         {
-            _vkApiService = vkApiService;
             _updateManager = updateManager;
         }
 
@@ -34,25 +30,5 @@ namespace Api.Controllers
 
         [HttpPost("friendsgroups")]
         public Task UpdateFriendsUserGroup(long id) => _updateManager.UpdateFriendsGroupsList(id);
-
-        [HttpGet("messages")]
-        public Task GetMessages()
-        {
-            var dialogs = _vkApiService.GetDialogs();
-            foreach (var dialog in dialogs)
-            {
-                _vkApiService.GetMessages(dialog);
-            }
-
-            return Task.CompletedTask;
-        }
-
-        [HttpPost("full")]
-        public Task GetAllFriends(long id = 0)
-        {
-            _updateManager.UpdateFriendList(new FriendsUpdateDto() {Recursive = true, UserId = id});
-            _updateManager.UpdateFriendsGroupsList(id);
-            return Task.CompletedTask;
-        }
     }
 }

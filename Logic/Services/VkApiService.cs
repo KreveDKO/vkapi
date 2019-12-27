@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using Logic.Managers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using VkNet;
+using VkNet.AudioBypassService.Extensions;
 using VkNet.Enums.Filters;
 using VkNet.Model;
 using VkNet.Model.RequestParams;
 using VkNet.Utils;
-using VkNet.AudioBypassService.Extensions;
-using Logic.Managers;
 
 namespace Logic.Services
 {
@@ -24,7 +23,7 @@ namespace Logic.Services
             ulong.TryParse(config["AppId"], out var appId);
             var login = config["VkAuth:Login"];
             var password = config["VkAuth:Password"];
-            var authParams = new ApiAuthParams()
+            var authParams = new ApiAuthParams
             {
                 ApplicationId = appId,
                 Settings = Settings.All,
@@ -94,10 +93,10 @@ namespace Logic.Services
         public List<long> GetDialogs(ulong offset = 0)
         {
             var result = new List<long>();
-            var @params = new GetConversationsParams()
+            var @params = new GetConversationsParams
             {
                 Count = 200,
-                Offset = offset,
+                Offset = offset
             };
             var dialogs = _vkApi.Messages.GetConversations(@params);
             var total = dialogs.Count;
@@ -125,7 +124,7 @@ namespace Logic.Services
                     subscriptions = _vkApi.Users.GetSubscriptions(userId, 200, count, GroupsFields.All);
                 }
             }
-            catch (Exception ex)
+            catch
             {
             }
 

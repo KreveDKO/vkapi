@@ -1,7 +1,8 @@
-﻿using Core.DataContext;
-using Core.Entity;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
+using Core.DataContext;
+using Core.Entity;
+using VkNet.Model;
 
 namespace Logic.Managers
 {
@@ -17,14 +18,14 @@ namespace Logic.Managers
             return result;
         }
         
-        public void UpdateMessages(List<VkNet.Model.Message> messages, long chatId)
+        public void UpdateMessages(List<Message> messages, long chatId)
         {
             if (messages.Count == 0)
             {
                 return;
             }
             var ids = messages.Select(m => m.Id ?? 0);
-            var attachments = messages.Where(m => m.Attachments.Any()).SelectMany(m => m.Attachments.Select(a => new Attachment() { ExternalMessageId = m.Id ?? 0, ExternalId = a.Instance.Id ?? 0, Type = a.Type.Name}));
+            var attachments = messages.Where(m => m.Attachments.Any()).SelectMany(m => m.Attachments.Select(a => new MessageAttachment { ExternalMessageId = m.Id ?? 0, ExternalId = a.Instance.Id ?? 0, Type = a.Type.Name}));
             using (var context = new ApplicationContext())
             {
                 var existsMessagesIds = context.Messages.Where(e => ids.Contains(e.ExternalId)).Select(e => e.ExternalId).ToList();              
@@ -36,7 +37,7 @@ namespace Logic.Managers
                 var user = context.Users.FirstOrDefault(u => u.UserId == chatId);
                 if (user == null)
                 {
-                    user = new User()
+                    user = new VkUser
                     {
                         UserId = chatId
 
@@ -46,10 +47,10 @@ namespace Logic.Managers
                     context.SaveChanges();
                 }
 
-                var insertResult = new List<Message>();
+                var insertResult = new List<VkMessage>();
                 foreach (var message in newMessages)
                 {
-                    var mappedMessage = new Message()
+                    var mappedMessage = new VkMessage
                     {
                         ExternalId = message.Id ?? 0,
                         Text = message.Text,

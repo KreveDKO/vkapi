@@ -9,12 +9,12 @@ namespace Core.Entity
         [ForeignKey("LeftUser")]
         public long LeftUserId { get; set; }
 
-        public virtual User LeftUser { get; set; }
+        public virtual VkUser LeftUser { get; set; }
 
         [ForeignKey("RightUser")]
         public long RightUserId { get; set; }
 
-        public virtual User RightUser { get; set; }
+        public virtual VkUser RightUser { get; set; }
     
     }
 }

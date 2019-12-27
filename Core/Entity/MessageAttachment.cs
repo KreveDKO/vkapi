@@ -1,6 +1,6 @@
 ﻿namespace Core.Entity
 {
-    public class Attachment
+    public class MessageAttachment
     {
 
         public long ExternalMessageId { get; set; }

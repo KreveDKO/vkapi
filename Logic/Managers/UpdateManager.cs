@@ -6,9 +6,9 @@ using Core.DataContext;
 using Core.Entity;
 using Logic.Dto;
 using Logic.Services;
+using VkNet.Enums;
 using VkNet.Enums.SafetyEnums;
 using VkNet.Model;
-using User = Core.Entity.User;
 
 namespace Logic.Managers
 {
@@ -40,17 +40,17 @@ namespace Logic.Managers
             var currentUserEntity = context.Users.FirstOrDefault(u => u.UserId == dto.UserId);
             if (currentUserEntity == null)
             {
-                VkNet.Model.User vkUser;
+                User vkUser;
                 try
                 {
                     vkUser = _vkApiService.GetUser(dto.UserId);
                 }
-                catch (Exception ex)
+                catch
                 {
                     return Task.CompletedTask;
                 }
 
-                currentUserEntity = new User
+                currentUserEntity = new VkUser
                 {
                     UserId = vkUser.Id,
                     IsDeactivated = false,
@@ -61,10 +61,10 @@ namespace Logic.Managers
                 context.SaveChanges();
             }
 
-            List<VkNet.Model.User> friends;
+            List<User> friends;
             try
             {
-                friends = _vkApiService.GetFriends(currentUserEntity.Id).ToList();
+                friends = _vkApiService.GetFriends(currentUserEntity.UserId).ToList();
             }
             catch
             {
@@ -77,7 +77,7 @@ namespace Logic.Managers
 
             foreach (var newFriend in newFriends.Where(f => context.Users.All(u => u.UserId != f.Id)))
             {
-                context.Users.Add(new User
+                context.Users.Add(new VkUser
                 {
                     UserId = newFriend.Id,
                     FullName = $"{newFriend.FirstName} {newFriend.LastName}",
@@ -88,17 +88,32 @@ namespace Logic.Managers
             }
 
             context.SaveChanges();
-            if (!dto.Recursive)
-            {
-                return Task.CompletedTask;
-            }
+
 
             foreach (var friend in friends)
             {
-                UpdateFriendList(new FriendsUpdateDto {Recursive = false, UserId = friend.Id}, context);
+                if (dto.Recursive)
+                {
+                    UpdateFriendList(new FriendsUpdateDto {Recursive = false, UserId = friend.Id}, context);
+                }
+                var friendEntity = context.Users.First(f => f.UserId == friend.Id);
+                if (context.FriendsUserToUsers.Any(c =>
+                    c.RightUserId == friendEntity.Id && c.LeftUserId == currentUserEntity.Id))
+                {
+                    continue;
+                }
+
+                context.FriendsUserToUsers.Add(new FriendsUserToUser
+                {
+                    LeftUserId = currentUserEntity.Id,
+                    RightUserId = friendEntity.Id
+                });
+                
+
             }
 
-            context.Dispose();
+            context.SaveChanges();
+
             return Task.CompletedTask;
         }
 
@@ -156,7 +171,7 @@ namespace Logic.Managers
                         GroupType = page.Type == GroupType.Group ? 0 : 1,
                         GroupId = page.Id,
                         Title = page.Name,
-                        IsDeactivated = page.IsClosed == VkNet.Enums.GroupPublicity.Closed
+                        IsDeactivated = page.IsClosed == GroupPublicity.Closed
                     };
                     context.Add(groupEntity);
                     context.SaveChanges();
@@ -167,7 +182,7 @@ namespace Logic.Managers
                     continue;
                 }
 
-                context.UserToUserGroup.Add(new UserToUserGroup()
+                context.UserToUserGroup.Add(new UserToUserGroup
                 {
                     User = user,
                     UserGroup = groupEntity
@@ -181,7 +196,7 @@ namespace Logic.Managers
 
         public Task UpdateUserInfo(long userId, ApplicationContext context = null)
         {
-            VkNet.Model.User user;
+            User user;
             try
             {
                 user = _vkApiService.GetUser(userId);
@@ -199,7 +214,7 @@ namespace Logic.Managers
             var userEntity = context.Users.FirstOrDefault(u => u.UserId == userId);
             if (userEntity == null)
             {
-                userEntity = new User()
+                userEntity = new VkUser
                 {
                     UserId = user.Id
                 };
