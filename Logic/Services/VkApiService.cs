@@ -93,8 +93,7 @@ namespace Logic.Services
             var @params = new GetConversationsParams
             {
                 Count = 200,
-                Offset = offset,
-                Fields = new []{}
+                Offset = offset
             };
             var dialogs = _vkApi.Messages.GetConversations(@params);
             var total = dialogs.Count;
