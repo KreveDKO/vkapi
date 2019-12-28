@@ -13,14 +13,14 @@ namespace Logic.Managers
             bool result;
             using (var context = new ApplicationContext())
             {
-                result = context.Messages.Count(m => m.User.UserId == userId) == count;
+                result = context.VkMessages.Count(m => m.VkUser.ExternalId == userId) == count;
             }
             return result;
         }
         
         public void UpdateMessages(List<Message> messages, long chatId)
         {
-            if (messages.Count == 0)
+            if ((messages?.Count ?? 0) == 0)
             {
                 return;
             }
@@ -28,22 +28,22 @@ namespace Logic.Managers
             var attachments = messages.Where(m => m.Attachments.Any()).SelectMany(m => m.Attachments.Select(a => new MessageAttachment { ExternalMessageId = m.Id ?? 0, ExternalId = a.Instance.Id ?? 0, Type = a.Type.Name}));
             using (var context = new ApplicationContext())
             {
-                var existsMessagesIds = context.Messages.Where(e => ids.Contains(e.ExternalId)).Select(e => e.ExternalId).ToList();              
+                var existsMessagesIds = context.VkMessages.Where(e => ids.Contains(e.ExternalId)).Select(e => e.ExternalId).ToList();              
                 var newMessages = messages.Where(e => !existsMessagesIds.Contains(e.Id ?? 0));
                 if (!newMessages.Any())
                 {
                     return;
                 }
-                var user = context.Users.FirstOrDefault(u => u.UserId == chatId);
+                var user = context.VkUsers.FirstOrDefault(u => u.ExternalId == chatId);
                 if (user == null)
                 {
                     user = new VkUser
                     {
-                        UserId = chatId
+                        ExternalId = chatId
 
 
                     };
-                    context.Users.Add(user);
+                    context.VkUsers.Add(user);
                     context.SaveChanges();
                 }
 
@@ -54,7 +54,7 @@ namespace Logic.Managers
                     {
                         ExternalId = message.Id ?? 0,
                         Text = message.Text,
-                        User = user,
+                        VkUser = user,
                         DateTime = message.Date ?? default,
                         Title = message.Title,
                         DialogId = message.FromId ?? 0
@@ -63,7 +63,7 @@ namespace Logic.Managers
                     };
                     insertResult.Add(mappedMessage);
                 }
-                context.Messages.AddRange(insertResult);
+                context.VkMessages.AddRange(insertResult);
                 context.SaveChanges();
 
             }

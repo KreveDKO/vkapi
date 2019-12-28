@@ -37,7 +37,7 @@ namespace Logic.Managers
             }
 
             //Находим текущего пользователя и обновляем его связи
-            var currentUserEntity = context.Users.FirstOrDefault(u => u.UserId == dto.UserId);
+            var currentUserEntity = context.VkUsers.FirstOrDefault(u => u.ExternalId == dto.UserId);
             if (currentUserEntity == null)
             {
                 User vkUser;
@@ -52,7 +52,7 @@ namespace Logic.Managers
 
                 currentUserEntity = new VkUser
                 {
-                    UserId = vkUser.Id,
+                    ExternalId = vkUser.Id,
                     IsDeactivated = false,
                     PhotoUrl = vkUser.PhotoMaxOrig.ToString(),
                     FullName = $"{vkUser.FirstName} {vkUser.LastName}"
@@ -64,7 +64,7 @@ namespace Logic.Managers
             List<User> friends;
             try
             {
-                friends = _vkApiService.GetFriends(currentUserEntity.UserId).ToList();
+                friends = _vkApiService.GetFriends(currentUserEntity.ExternalId).ToList();
             }
             catch
             {
@@ -75,11 +75,11 @@ namespace Logic.Managers
             var newFriends = _friendsService.GetNewUsers(context, currentUserEntity.Id, friends);
 
 
-            foreach (var newFriend in newFriends.Where(f => context.Users.All(u => u.UserId != f.Id)))
+            foreach (var newFriend in newFriends.Where(f => context.VkUsers.All(u => u.ExternalId != f.Id)))
             {
-                context.Users.Add(new VkUser
+                context.VkUsers.Add(new VkUser
                 {
-                    UserId = newFriend.Id,
+                    ExternalId = newFriend.Id,
                     FullName = $"{newFriend.FirstName} {newFriend.LastName}",
                     IsDeactivated = newFriend.IsDeactivated,
                     LastCheck = DateTime.Now,
@@ -96,7 +96,7 @@ namespace Logic.Managers
                 {
                     UpdateFriendList(new FriendsUpdateDto {Recursive = false, UserId = friend.Id}, context);
                 }
-                var friendEntity = context.Users.First(f => f.UserId == friend.Id);
+                var friendEntity = context.VkUsers.First(f => f.ExternalId == friend.Id);
                 if (context.FriendsUserToUsers.Any(c =>
                     c.RightUserId == friendEntity.Id && c.LeftUserId == currentUserEntity.Id))
                 {
@@ -122,15 +122,17 @@ namespace Logic.Managers
             using (var context = new ApplicationContext())
             {
                 UpdateUserInfo(userId, context);
-                var user = context.Users.FirstOrDefault(u => u.UserId == userId);
+                var user = context.VkUsers.FirstOrDefault(u => u.ExternalId == userId);
                 if (user == null)
                 {
                     return Task.CompletedTask;
                 }
 
-                foreach (var friend in user.MuturalFriend)
+                var mutualFriend = context.FriendsUserToUsers.Where(u => u.LeftUserId == user.Id)
+                    .Select(u => u.RightUser).ToList();
+                foreach (var friend in mutualFriend)
                 {
-                    UpdateGroupsList(friend.UserId, context);
+                    UpdateGroupsList(friend.ExternalId, context);
                 }
             }
 
@@ -154,7 +156,7 @@ namespace Logic.Managers
                 context = new ApplicationContext();
             }
 
-            var user = context.Users.FirstOrDefault(u => u.UserId == userId);
+            var user = context.VkUsers.FirstOrDefault(u => u.ExternalId == userId);
             if (user == null)
             {
                 return Task.CompletedTask;
@@ -163,13 +165,13 @@ namespace Logic.Managers
             var pages = groups.Where(p => p.Type == GroupType.Page || p.Type == GroupType.Group);
             foreach (var page in pages)
             {
-                var groupEntity = context.UserGroups.FirstOrDefault(g => g.GroupId == page.Id);
+                var groupEntity = context.UserGroups.FirstOrDefault(g => g.ExternalId == page.Id);
                 if (groupEntity == null)
                 {
-                    groupEntity = new UserGroup
+                    groupEntity = new VkUserGroup
                     {
                         GroupType = page.Type == GroupType.Group ? 0 : 1,
-                        GroupId = page.Id,
+                        ExternalId = page.Id,
                         Title = page.Name,
                         IsDeactivated = page.IsClosed == GroupPublicity.Closed
                     };
@@ -177,15 +179,15 @@ namespace Logic.Managers
                     context.SaveChanges();
                 }
 
-                if (context.UserToUserGroup.Any(u2g => u2g.UserId == user.Id && u2g.UserGroupId == groupEntity.Id))
+                if (context.UserToUserGroup.Any(u2g => u2g.VkUserId == user.Id && u2g.VkUserGroupId == groupEntity.Id))
                 {
                     continue;
                 }
 
                 context.UserToUserGroup.Add(new UserToUserGroup
                 {
-                    User = user,
-                    UserGroup = groupEntity
+                    VkUser = user,
+                    VkUserGroup = groupEntity
                 });
             }
 
@@ -211,14 +213,14 @@ namespace Logic.Managers
                 context = new ApplicationContext();
             }
 
-            var userEntity = context.Users.FirstOrDefault(u => u.UserId == userId);
+            var userEntity = context.VkUsers.FirstOrDefault(u => u.ExternalId == userId);
             if (userEntity == null)
             {
                 userEntity = new VkUser
                 {
-                    UserId = user.Id
+                    ExternalId = user.Id
                 };
-                context.Users.Add(userEntity);
+                context.VkUsers.Add(userEntity);
             }
 
             userEntity.FullName = $"{user.FirstName} {user.LastName}";

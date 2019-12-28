@@ -54,9 +54,6 @@ namespace Logic.Services
                 ProfileFields.FirstName | ProfileFields.PhotoMaxOrig | ProfileFields.LastName | ProfileFields.Photo50)
             .FirstOrDefault();
 
-        public Conversation GetConversation(long userId) => _vkApi.Messages
-            .GetConversationsById(new List<long> {userId}, new List<string>()).Items.FirstOrDefault();
-
 
         public List<Message> GetMessages(long userId)
         {
@@ -79,8 +76,8 @@ namespace Logic.Services
             {
                 count += getResult.Messages.Count();
                 _messageManager.UpdateMessages(getResult.Messages.ToList(), userId);
-                result.AddRange(
-                    getResult.Messages.ToList());
+//                result.AddRange(
+//                    getResult.Messages.ToList());
                 @params.Offset += 200;
                 getResult = _vkApi.Messages.GetHistory(@params);
             }
@@ -96,7 +93,8 @@ namespace Logic.Services
             var @params = new GetConversationsParams
             {
                 Count = 200,
-                Offset = offset
+                Offset = offset,
+                Fields = new []{}
             };
             var dialogs = _vkApi.Messages.GetConversations(@params);
             var total = dialogs.Count;

@@ -12,7 +12,7 @@ namespace Logic.Services
             List<User> users)
         {
             var newUsersIds = users.Select(e => e.Id);
-            var newEntityUsers = context.Users.Where(u => newUsersIds.Contains(u.UserId)).Select(u => u.Id).ToList();
+            var newEntityUsers = context.VkUsers.Where(u => newUsersIds.Contains(u.ExternalId)).Select(u => u.Id).ToList();
             var removed = context.FriendsUserToUsers.Where(e => e.LeftUserId == userId && !newEntityUsers.Contains(e.RightUserId));
 
             return removed;
@@ -22,8 +22,8 @@ namespace Logic.Services
         {
             var newUsers = users.Select(e => e.Id);
 
-            var existsM2M = context.FriendsUserToUsers.Where(e => e.LeftUserId == userId/*).ToList().Where(e =>*/ && newUsers.Contains(e.RightUser.UserId)).Select(e => e.RightUserId).ToList();
-            var existsUsers = context.Users.Where(e => existsM2M.Contains(e.Id)).Select(e => e.UserId).ToList();
+            var existsM2M = context.FriendsUserToUsers.Where(e => e.LeftUserId == userId/*).ToList().Where(e =>*/ && newUsers.Contains(e.RightUser.ExternalId)).Select(e => e.RightUserId).ToList();
+            var existsUsers = context.VkUsers.Where(e => existsM2M.Contains(e.Id)).Select(e => e.ExternalId).ToList();
             newUsers = newUsers.Where(e => !existsUsers.Contains(e)).ToList();
             return users.Where(f => newUsers.Contains(f.Id)).ToList();
         }

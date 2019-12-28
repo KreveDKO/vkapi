@@ -19,7 +19,7 @@ namespace Api.Controllers
         public Task Friends([FromBody] FriendsUpdateDto dto) => _updateManager.UpdateFriendList(dto);
 
 
-        [HttpPost("friendsgroups")]
+        [HttpPost("groups")]
         public Task FriendsGroups(long id) => _updateManager.UpdateGroupsList(id);
 
         [HttpPost("userinfo")]

@@ -12,18 +12,18 @@ namespace Core.Entity
         /// </summary>
         public long DialogId { get; set; }
 
-        [ForeignKey("User")]
+        [ForeignKey("VkUser")]
         public long UserId { get; set; }
 
-        public virtual VkUser User { get; set; }
+        public virtual VkUser VkUser { get; set; }
         /// <summary>
         /// Внешний идентификатор сообщения
         /// </summary>
         public long ExternalId { get; set; }
 
-        public string Text { get; set; }
+        public string? Text { get; set; }
 
-        public string Title { get; set; }
+        public string? Title { get; set; }
 
         public DateTime DateTime { get; set; }
 

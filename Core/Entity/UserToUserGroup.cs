@@ -6,12 +6,12 @@ namespace Core.Entity
     {
         public long Id { get; set; }
 
-        [ForeignKey("User")]
-        public long UserId { get; set; }
-        public virtual VkUser User { get; set; }
+        [ForeignKey("VkUser")]
+        public long VkUserId { get; set; }
+        public virtual VkUser VkUser { get; set; }
 
-        [ForeignKey("UserGroup")]
-        public long UserGroupId { get; set; }
-        public virtual UserGroup UserGroup { get; set; }
+        [ForeignKey("VkUserGroup")]
+        public long VkUserGroupId { get; set; }
+        public virtual VkUserGroup VkUserGroup { get; set; }
     }
 }

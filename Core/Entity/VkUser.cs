@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 
 namespace Core.Entity
 {
@@ -7,10 +8,9 @@ namespace Core.Entity
     {
         public long Id { get; set; }
         public bool IsDeactivated { get; set; }
-        public string FullName { get; set; }
-        public string PhotoUrl { get; set; }
-        public virtual  List<VkUser> MuturalFriend { get; set; }
-        public long UserId { get; set; }
+        public string? FullName { get; set; }
+        public string? PhotoUrl { get; set; }
+        public long ExternalId { get; set; }
         public DateTime LastCheck { get; set; }
 
     }
