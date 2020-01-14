@@ -42,5 +42,26 @@ namespace Api.Controllers
         /// <param name="id">Идентификатор пользователя в ВК</param>
         [HttpPost("friendsgroups")]
         public Task UpdateFriendsUserGroup(long id) => _updateManager.UpdateFriendsGroupsList(id);
+
+        /// <summary>
+        /// Обновляет сообщения пользователя
+        /// </summary>
+        [HttpPost("messages")]
+        public Task UpdateMessages() => _updateManager.UpdateMessages();
+
+        
+        /// <summary>
+        /// Обновляет аудиозаписи пользователя
+        /// </summary>
+        /// <param name="id">Идентификатор пользователя в ВК</param>
+        [HttpPost("audio")]
+        public Task UpdateAudio(long id) => _updateManager.UpdateAudio(id);
+
+        /// <summary>
+        /// Обновляет видеозаписи пользователя
+        /// </summary>
+        /// <param name="id">Идентификатор пользователя в ВК</param>
+        [HttpPost("video")]
+        public Task UpdateVideo(long id) => _updateManager.UpdateVideo(id);
     }
 }

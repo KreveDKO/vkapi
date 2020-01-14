@@ -16,12 +16,12 @@ namespace Logic.Services
     public class VkApiService
     {
         private VkApi _vkApi;
-        private MessageManager _messageManager;
+        private MessageService _messageService;
         private DataContextService _contextService;
         
-        public VkApiService(IConfiguration config, MessageManager messageManager, DataContextService contextService)
+        public VkApiService(IConfiguration config, MessageService messageService, DataContextService contextService)
         {
-            _messageManager = messageManager;
+            _messageService = messageService;
             ulong.TryParse(config["AppId"], out var appId);
             var login = config["VkAuth:Login"];
             var password = config["VkAuth:Password"];
@@ -89,12 +89,12 @@ namespace Logic.Services
             while (count < total)
             {
                 count += getResult.Messages.Count();
-                _messageManager.UpdateMessages(getResult.Messages.ToList(), userId);
+                _messageService.UpdateMessages(getResult.Messages.ToList(), userId);
                 @params.Offset += 200;
                 getResult = _vkApi.Messages.GetHistory(@params);
             }
 
-            _messageManager.UpdateMessages(getResult.Messages.ToList(), userId);
+            _messageService.UpdateMessages(getResult.Messages.ToList(), userId);
             return result;
         }
 

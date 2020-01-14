@@ -30,7 +30,7 @@ namespace Api
                     options.MinimumSameSitePolicy = SameSiteMode.None;
                 })
                 .AddTransient<VkApiService>()
-                .AddTransient<MessageManager>()
+                .AddTransient<MessageService>()
                 .AddTransient<UpdateManager>()
                 .AddTransient<FriendsService>()
                 .AddTransient<DataContextService>();

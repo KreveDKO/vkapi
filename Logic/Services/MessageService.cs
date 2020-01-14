@@ -4,13 +4,13 @@ using Core.DataContext;
 using Core.Entity;
 using VkNet.Model;
 
-namespace Logic.Managers
+namespace Logic.Services
 {
-    public class MessageManager
+    public class MessageService
     {
         private readonly DataContextService _contextService;
 
-        public MessageManager(DataContextService contextService)
+        public MessageService(DataContextService contextService)
         {
             _contextService = contextService;
         }
@@ -22,7 +22,9 @@ namespace Logic.Managers
                 return;
             }
             var ids = messages.Select(m => m.Id ?? 0);
-            var attachments = messages.Where(m => m.Attachments.Any()).SelectMany(m => m.Attachments.Select(a => new MessageAttachment { ExternalMessageId = m.Id ?? 0, ExternalId = a.Instance.Id ?? 0, Type = a.Type.Name}));
+            var attachments = messages.Where(m => m.Attachments.Any()).SelectMany(m =>
+                m.Attachments.Select(a => new MessageAttachment
+                    {ExternalMessageId = m.Id ?? 0, ExternalId = a.Instance.Id ?? 0, Type = a.Type.Name}));
             using (var context = new  ApplicationContext(_contextService.Options))
             {
                 var existsMessagesIds = context.VkMessages.Where(e => ids.Contains(e.ExternalId)).Select(e => e.ExternalId).ToList();              

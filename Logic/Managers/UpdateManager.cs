@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Core.DataContext;
@@ -17,15 +18,18 @@ namespace Logic.Managers
         private readonly VkApiService _vkApiService;
         private readonly FriendsService _friendsService;
         private readonly DataContextService _contextService;
-        public UpdateManager(VkApiService vkApiService, FriendsService friendsService, DataContextService contextService)
+        private readonly MessageService _messageService;
+        public UpdateManager(VkApiService vkApiService, FriendsService friendsService, DataContextService contextService, MessageService messageService)
         {
             _vkApiService = vkApiService;
             _friendsService = friendsService;
             _contextService = contextService;
+            _messageService = messageService;
         }
 
         public Task UpdateFriendList(FriendsUpdateDto dto, ApplicationContext context = null)
         {
+            Debug.WriteLine($"{GetType()}.{nameof(UpdateFriendList)} started");
             if (context == null)
             {
                 context = new ApplicationContext(_contextService.Options);
@@ -59,6 +63,7 @@ namespace Logic.Managers
                 };
                 context.Add(currentUserEntity);
                 context.SaveChanges();
+                
             }
 
             List<User> friends;
@@ -113,12 +118,13 @@ namespace Logic.Managers
             }
 
             context.SaveChanges();
-
+            Debug.WriteLine($"{GetType()}.{nameof(UpdateFriendList)} completed");
             return Task.CompletedTask;
         }
 
         public Task UpdateFriendsGroupsList(long userId)
         {
+            Debug.WriteLine($"{GetType()}.{nameof(UpdateFriendsGroupsList)} started");
             using (var context = new ApplicationContext(_contextService.Options))
             {
                 UpdateUserInfo(userId, context);
@@ -135,12 +141,13 @@ namespace Logic.Managers
                     UpdateGroupsList(friend.ExternalId, context);
                 }
             }
-
+            Debug.WriteLine($"{GetType()}.{nameof(UpdateFriendsGroupsList)} completed");
             return Task.CompletedTask;
         }
 
         public Task UpdateGroupsList(long userId, ApplicationContext context = null)
         {
+            Debug.WriteLine($"{GetType()}.{nameof(UpdateGroupsList)} completed");
             List<Group> groups;
             try
             {
@@ -192,12 +199,13 @@ namespace Logic.Managers
             }
 
             context.SaveChanges();
-
+            Debug.WriteLine($"{GetType()}.{nameof(UpdateGroupsList)} completed");
             return Task.CompletedTask;
         }
 
         public Task UpdateUserInfo(long userId, ApplicationContext context = null)
         {
+            Debug.WriteLine($"{GetType()}.{nameof(UpdateUserInfo)} started");
             User user;
             try
             {
@@ -228,7 +236,31 @@ namespace Logic.Managers
             userEntity.IsDeactivated = user.IsDeactivated;
             userEntity.LastCheck = DateTime.Now;
             context.SaveChanges();
+            Debug.WriteLine($"{GetType()}.{nameof(UpdateUserInfo)} completed");
             return Task.CompletedTask;
+        }
+
+        public Task UpdateMessages()
+        {
+            Debug.WriteLine($"{GetType()}.{nameof(UpdateMessages)} started");
+            var dialogs = _vkApiService.GetDialogs();
+            foreach (var dialog in dialogs)
+            {
+                Debug.WriteLine($"Getting dialog {dialog}");
+                _vkApiService.GetMessages(dialog);
+            }
+            Debug.WriteLine($"{GetType()}.{nameof(UpdateMessages)} completed");
+            return Task.CompletedTask;
+        }
+
+        public Task UpdateAudio(long id, ApplicationContext context = null)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task UpdateVideo(long id, ApplicationContext context = null)
+        {
+            throw new NotImplementedException();
         }
     }
 }
