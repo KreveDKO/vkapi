@@ -8,14 +8,11 @@ namespace Logic.Managers
 {
     public class MessageManager
     {
-        public bool CheckTotalCount(long userId, uint count)
+        private readonly DataContextService _contextService;
+
+        public MessageManager(DataContextService contextService)
         {
-            bool result;
-            using (var context = new ApplicationContext())
-            {
-                result = context.VkMessages.Count(m => m.VkUser.ExternalId == userId) == count;
-            }
-            return result;
+            _contextService = contextService;
         }
         
         public void UpdateMessages(List<Message> messages, long chatId)
@@ -26,7 +23,7 @@ namespace Logic.Managers
             }
             var ids = messages.Select(m => m.Id ?? 0);
             var attachments = messages.Where(m => m.Attachments.Any()).SelectMany(m => m.Attachments.Select(a => new MessageAttachment { ExternalMessageId = m.Id ?? 0, ExternalId = a.Instance.Id ?? 0, Type = a.Type.Name}));
-            using (var context = new ApplicationContext())
+            using (var context = new  ApplicationContext(_contextService.Options))
             {
                 var existsMessagesIds = context.VkMessages.Where(e => ids.Contains(e.ExternalId)).Select(e => e.ExternalId).ToList();              
                 var newMessages = messages.Where(e => !existsMessagesIds.Contains(e.Id ?? 0));

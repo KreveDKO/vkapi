@@ -1,10 +1,19 @@
 ﻿using Core.Entity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace Core.DataContext
 {
     public class ApplicationContext : DbContext
     {
+
+
+        public ApplicationContext(DbContextOptions<ApplicationContext> options) : base(options)
+        {
+        }
+        
+        
+        
         public DbSet<VkUser> VkUsers { get; set; }
         public DbSet<FriendsUserToUser> FriendsUserToUsers { get; set; }
 
@@ -12,13 +21,6 @@ namespace Core.DataContext
 
         public DbSet<VkUserGroup> UserGroups { get; set; }
         public DbSet<UserToUserGroup> UserToUserGroup { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            
-            optionsBuilder
-                .UseNpgsql("Host=localhost;Port=5432;Database=myfriends;Username=postgres;Password=123").UseLazyLoadingProxies();
-        }
 
     }
 }

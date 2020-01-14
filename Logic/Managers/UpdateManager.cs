@@ -16,19 +16,19 @@ namespace Logic.Managers
     {
         private readonly VkApiService _vkApiService;
         private readonly FriendsService _friendsService;
-
-
-        public UpdateManager(VkApiService vkApiService, FriendsService friendsService)
+        private readonly DataContextService _contextService;
+        public UpdateManager(VkApiService vkApiService, FriendsService friendsService, DataContextService contextService)
         {
             _vkApiService = vkApiService;
             _friendsService = friendsService;
+            _contextService = contextService;
         }
 
         public Task UpdateFriendList(FriendsUpdateDto dto, ApplicationContext context = null)
         {
             if (context == null)
             {
-                context = new ApplicationContext();
+                context = new ApplicationContext(_contextService.Options);
             }
 
             if (dto.UserId == null)
@@ -119,7 +119,7 @@ namespace Logic.Managers
 
         public Task UpdateFriendsGroupsList(long userId)
         {
-            using (var context = new ApplicationContext())
+            using (var context = new ApplicationContext(_contextService.Options))
             {
                 UpdateUserInfo(userId, context);
                 var user = context.VkUsers.FirstOrDefault(u => u.ExternalId == userId);
@@ -153,7 +153,7 @@ namespace Logic.Managers
 
             if (context == null)
             {
-                context = new ApplicationContext();
+                context = new ApplicationContext(_contextService.Options);
             }
 
             var user = context.VkUsers.FirstOrDefault(u => u.ExternalId == userId);
@@ -210,7 +210,7 @@ namespace Logic.Managers
 
             if (context == null)
             {
-                context = new ApplicationContext();
+                context = new ApplicationContext(_contextService.Options);
             }
 
             var userEntity = context.VkUsers.FirstOrDefault(u => u.ExternalId == userId);

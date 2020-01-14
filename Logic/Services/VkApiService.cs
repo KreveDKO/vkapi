@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Core.DataContext;
 using Logic.Managers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -16,8 +17,9 @@ namespace Logic.Services
     {
         private VkApi _vkApi;
         private MessageManager _messageManager;
-
-        public VkApiService(IConfiguration config, MessageManager messageManager)
+        private DataContextService _contextService;
+        
+        public VkApiService(IConfiguration config, MessageManager messageManager, DataContextService contextService)
         {
             _messageManager = messageManager;
             ulong.TryParse(config["AppId"], out var appId);
@@ -34,8 +36,20 @@ namespace Logic.Services
             services.AddAudioBypass();
             _vkApi = new VkApi(services);
             _vkApi.Authorize(authParams);
+            _contextService = contextService;
         }
 
+        
+        private bool CheckTotalCount(long userId, uint count)
+        {
+            bool result;
+            using (var context = new ApplicationContext(_contextService.Options))
+            {
+                result = context.VkMessages.Count(m => m.VkUser.ExternalId == userId) == count;
+            }
+            return result;
+        }
+        
         public VkCollection<User> GetFriends(long? userId = null)
         {
             var friendsGetParams = new FriendsGetParams
@@ -65,7 +79,7 @@ namespace Logic.Services
                 Offset = 0
             };
             var getResult = _vkApi.Messages.GetHistory(@params);
-            if (_messageManager.CheckTotalCount(userId, getResult.TotalCount))
+            if (CheckTotalCount(userId, getResult.TotalCount))
             {
                 return result;
             }
@@ -76,8 +90,6 @@ namespace Logic.Services
             {
                 count += getResult.Messages.Count();
                 _messageManager.UpdateMessages(getResult.Messages.ToList(), userId);
-//                result.AddRange(
-//                    getResult.Messages.ToList());
                 @params.Offset += 200;
                 getResult = _vkApi.Messages.GetHistory(@params);
             }

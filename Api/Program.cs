@@ -1,9 +1,7 @@
-﻿using Api;
-using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
+﻿using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
-namespace VkExperements
+namespace Api
 {
     public class Program
     {

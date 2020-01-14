@@ -10,8 +10,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Core.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    [Migration("20191228091211_init")]
-    partial class init
+    [Migration("20200114122338_Init")]
+    partial class Init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -82,11 +82,9 @@ namespace Core.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<string>("Text")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Title")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<long>("UserId")
@@ -110,7 +108,6 @@ namespace Core.Migrations
                         .HasColumnType("bigint");
 
                     b.Property<string>("FullName")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<bool>("IsDeactivated")
@@ -120,7 +117,6 @@ namespace Core.Migrations
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("PhotoUrl")
-                        .IsRequired()
                         .HasColumnType("text");
 
                     b.HasKey("Id");

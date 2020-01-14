@@ -4,7 +4,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Core.Migrations
 {
-    public partial class init : Migration
+    public partial class Init : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
@@ -31,8 +31,8 @@ namespace Core.Migrations
                     Id = table.Column<long>(nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     IsDeactivated = table.Column<bool>(nullable: false),
-                    FullName = table.Column<string>(nullable: false),
-                    PhotoUrl = table.Column<string>(nullable: false),
+                    FullName = table.Column<string>(nullable: true),
+                    PhotoUrl = table.Column<string>(nullable: true),
                     ExternalId = table.Column<long>(nullable: false),
                     LastCheck = table.Column<DateTime>(nullable: false)
                 },
@@ -102,8 +102,8 @@ namespace Core.Migrations
                     DialogId = table.Column<long>(nullable: false),
                     UserId = table.Column<long>(nullable: false),
                     ExternalId = table.Column<long>(nullable: false),
-                    Text = table.Column<string>(nullable: false),
-                    Title = table.Column<string>(nullable: false),
+                    Text = table.Column<string>(nullable: true),
+                    Title = table.Column<string>(nullable: true),
                     DateTime = table.Column<DateTime>(nullable: false)
                 },
                 constraints: table =>
