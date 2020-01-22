@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Core.DataContext;
 using Logic.Managers;
@@ -7,7 +8,10 @@ using Microsoft.Extensions.DependencyInjection;
 using VkNet;
 using VkNet.AudioBypassService.Extensions;
 using VkNet.Enums.Filters;
+using VkNet.Enums.SafetyEnums;
 using VkNet.Model;
+using VkNet.Model.Attachments;
+using VkNet.Model.GroupUpdate;
 using VkNet.Model.RequestParams;
 using VkNet.Utils;
 
@@ -71,6 +75,7 @@ namespace Logic.Services
 
         public List<Message> GetMessages(long userId)
         {
+            Debug.WriteLine($"{GetType()}.{nameof(GetMessages)} started");
             var result = new List<Message>();
             var @params = new MessagesGetHistoryParams
             {
@@ -95,12 +100,14 @@ namespace Logic.Services
             }
 
             _messageService.UpdateMessages(getResult.Messages.ToList(), userId);
+            Debug.WriteLine($"{GetType()}.{nameof(GetMessages)} completed");
             return result;
         }
 
 
         public List<long> GetDialogs(ulong offset = 0)
         {
+            Debug.WriteLine($"{GetType()}.{nameof(GetDialogs)} started");
             var result = new List<long>();
             var @params = new GetConversationsParams
             {
@@ -115,7 +122,7 @@ namespace Logic.Services
                 @params.Offset += 200;
                 dialogs = _vkApi.Messages.GetConversations(@params);
             }
-
+            Debug.WriteLine($"{GetType()}.{nameof(GetDialogs)} completed");
             return result;
         }
 
@@ -135,6 +142,28 @@ namespace Logic.Services
             }
             catch
             {
+            }
+
+            return result;
+        }
+
+        public List<Post> GetWallMessage(long userId)
+        {
+            ;
+            var wallGetParams = new WallGetParams()
+            {
+                OwnerId = userId,
+                Count = 100,
+                Offset =  0,
+                Fields = WallFilter.All
+            };
+            var response = _vkApi.Wall.Get(wallGetParams);
+            var result = new List<Post>();
+            while (response.WallPosts.Any())
+            {
+                result.AddRange(response.WallPosts);
+                wallGetParams.Offset += 100;
+                response = _vkApi.Wall.Get(wallGetParams);
             }
 
             return result;

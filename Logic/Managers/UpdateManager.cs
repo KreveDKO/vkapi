@@ -29,7 +29,7 @@ namespace Logic.Managers
 
         public Task UpdateFriendList(FriendsUpdateDto dto, ApplicationContext context = null)
         {
-            Debug.WriteLine($"{GetType()}.{nameof(UpdateFriendList)} started");
+            Console.WriteLine($"{GetType()}.{nameof(UpdateFriendList)} started");
             if (context == null)
             {
                 context = new ApplicationContext(_contextService.Options);
@@ -118,13 +118,13 @@ namespace Logic.Managers
             }
 
             context.SaveChanges();
-            Debug.WriteLine($"{GetType()}.{nameof(UpdateFriendList)} completed");
+            Console.WriteLine($"{GetType()}.{nameof(UpdateFriendList)} completed");
             return Task.CompletedTask;
         }
 
         public Task UpdateFriendsGroupsList(long userId)
         {
-            Debug.WriteLine($"{GetType()}.{nameof(UpdateFriendsGroupsList)} started");
+            Console.WriteLine($"{GetType()}.{nameof(UpdateFriendsGroupsList)} started");
             using (var context = new ApplicationContext(_contextService.Options))
             {
                 UpdateUserInfo(userId, context);
@@ -141,13 +141,13 @@ namespace Logic.Managers
                     UpdateGroupsList(friend.ExternalId, context);
                 }
             }
-            Debug.WriteLine($"{GetType()}.{nameof(UpdateFriendsGroupsList)} completed");
+            Console.WriteLine($"{GetType()}.{nameof(UpdateFriendsGroupsList)} completed");
             return Task.CompletedTask;
         }
 
         public Task UpdateGroupsList(long userId, ApplicationContext context = null)
         {
-            Debug.WriteLine($"{GetType()}.{nameof(UpdateGroupsList)} completed");
+            Console.WriteLine($"{GetType()}.{nameof(UpdateGroupsList)} completed");
             List<Group> groups;
             try
             {
@@ -199,13 +199,13 @@ namespace Logic.Managers
             }
 
             context.SaveChanges();
-            Debug.WriteLine($"{GetType()}.{nameof(UpdateGroupsList)} completed");
+            Console.WriteLine($"{GetType()}.{nameof(UpdateGroupsList)} completed");
             return Task.CompletedTask;
         }
 
         public Task UpdateUserInfo(long userId, ApplicationContext context = null)
         {
-            Debug.WriteLine($"{GetType()}.{nameof(UpdateUserInfo)} started");
+            Console.WriteLine($"{GetType()}.{nameof(UpdateUserInfo)} started");
             User user;
             try
             {
@@ -236,20 +236,20 @@ namespace Logic.Managers
             userEntity.IsDeactivated = user.IsDeactivated;
             userEntity.LastCheck = DateTime.Now;
             context.SaveChanges();
-            Debug.WriteLine($"{GetType()}.{nameof(UpdateUserInfo)} completed");
+            Console.WriteLine($"{GetType()}.{nameof(UpdateUserInfo)} completed");
             return Task.CompletedTask;
         }
 
         public Task UpdateMessages()
         {
-            Debug.WriteLine($"{GetType()}.{nameof(UpdateMessages)} started");
+            Console.WriteLine($"{GetType()}.{nameof(UpdateMessages)} started");
             var dialogs = _vkApiService.GetDialogs();
             foreach (var dialog in dialogs)
             {
-                Debug.WriteLine($"Getting dialog {dialog}");
+                Console.WriteLine($"{GetType()}.{nameof(UpdateMessages)} getting dialog {dialog}");
                 _vkApiService.GetMessages(dialog);
             }
-            Debug.WriteLine($"{GetType()}.{nameof(UpdateMessages)} completed");
+            Console.WriteLine($"{GetType()}.{nameof(UpdateMessages)} completed");
             return Task.CompletedTask;
         }
 
