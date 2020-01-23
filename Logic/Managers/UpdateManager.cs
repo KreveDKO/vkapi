@@ -262,5 +262,13 @@ namespace Logic.Managers
         {
             throw new NotImplementedException();
         }
+
+        public Task UpdateWall(long id)
+        {
+            var wallMessages = _vkApiService.GetWallMessage(id);
+            var context = new ApplicationContext(_contextService.Options);
+            return Task.CompletedTask;
+
+        }
     }
 }

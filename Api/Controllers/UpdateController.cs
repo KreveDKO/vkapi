@@ -63,5 +63,8 @@ namespace Api.Controllers
         /// <param name="id">Идентификатор пользователя в ВК</param>
         [HttpPost("video")]
         public Task UpdateVideo(long id) => _updateManager.UpdateVideo(id);
+
+        [HttpPost("wall")]
+        public Task UpdateWall(long id) => _updateManager.UpdateWall(id);
     }
 }
