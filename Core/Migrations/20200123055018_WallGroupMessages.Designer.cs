@@ -3,15 +3,17 @@ using System;
 using Core.DataContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Core.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20200123055018_WallGroupMessages")]
+    partial class WallGroupMessages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -160,19 +162,10 @@ namespace Core.Migrations
                     b.Property<long?>("AuthorUserId")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("CommentsCount")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("timestamp without time zone");
-
                     b.Property<long>("ExternalId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("LikesCount")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("RepostsCount")
                         .HasColumnType("integer");
 
                     b.Property<string>("Text")

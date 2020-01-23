@@ -126,6 +126,22 @@ namespace Logic.Services
             return result;
         }
 
+        public Group GetGroup(List<string> ids)
+        {
+            var result = new Group();
+            try
+            {
+                var response = _vkApi.Groups.GetById(ids, ids.First(), GroupsFields.All);
+                result = response.FirstOrDefault();
+            }
+            catch
+            {
+                
+            }
+
+            return result;
+        }
+        
         public List<Group> GetGroups(long userId)
         {
             var result = new List<Group>();
@@ -147,19 +163,19 @@ namespace Logic.Services
             return result;
         }
 
-        public List<Post> GetWallMessage(long userId)
+        public List<Post> GetWallMessage(long userId,ulong offset = 0, int limit = 0)
         {
             ;
             var wallGetParams = new WallGetParams()
             {
                 OwnerId = userId,
                 Count = 100,
-                Offset =  0,
+                Offset =  offset,
                 Fields = WallFilter.All
             };
             var response = _vkApi.Wall.Get(wallGetParams);
             var result = new List<Post>();
-            while (response.WallPosts.Any())
+            while (response.WallPosts.Any() && (limit == 0 || result.Count < limit))
             {
                 result.AddRange(response.WallPosts);
                 wallGetParams.Offset += 100;

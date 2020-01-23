@@ -13,7 +13,7 @@ namespace Core.DataContext
         }
         
         
-        
+        public DbSet<VkWallMessage> VkWallMessages { get; set; }
         public DbSet<VkUser> VkUsers { get; set; }
         public DbSet<FriendsUserToUser> FriendsUserToUsers { get; set; }
 

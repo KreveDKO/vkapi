@@ -19,7 +19,9 @@ namespace Logic.Managers
         private readonly FriendsService _friendsService;
         private readonly DataContextService _contextService;
         private readonly MessageService _messageService;
-        public UpdateManager(VkApiService vkApiService, FriendsService friendsService, DataContextService contextService, MessageService messageService)
+
+        public UpdateManager(VkApiService vkApiService, FriendsService friendsService,
+            DataContextService contextService, MessageService messageService)
         {
             _vkApiService = vkApiService;
             _friendsService = friendsService;
@@ -63,7 +65,6 @@ namespace Logic.Managers
                 };
                 context.Add(currentUserEntity);
                 context.SaveChanges();
-                
             }
 
             List<User> friends;
@@ -101,6 +102,7 @@ namespace Logic.Managers
                 {
                     UpdateFriendList(new FriendsUpdateDto {Recursive = false, UserId = friend.Id}, context);
                 }
+
                 var friendEntity = context.VkUsers.First(f => f.ExternalId == friend.Id);
                 if (context.FriendsUserToUsers.Any(c =>
                     c.RightUserId == friendEntity.Id && c.LeftUserId == currentUserEntity.Id))
@@ -113,8 +115,6 @@ namespace Logic.Managers
                     LeftUserId = currentUserEntity.Id,
                     RightUserId = friendEntity.Id
                 });
-                
-
             }
 
             context.SaveChanges();
@@ -141,6 +141,7 @@ namespace Logic.Managers
                     UpdateGroupsList(friend.ExternalId, context);
                 }
             }
+
             Console.WriteLine($"{GetType()}.{nameof(UpdateFriendsGroupsList)} completed");
             return Task.CompletedTask;
         }
@@ -203,7 +204,7 @@ namespace Logic.Managers
             return Task.CompletedTask;
         }
 
-        public Task UpdateUserInfo(long userId, ApplicationContext context = null)
+        public long UpdateUserInfo(long userId, ApplicationContext context = null)
         {
             Console.WriteLine($"{GetType()}.{nameof(UpdateUserInfo)} started");
             User user;
@@ -213,7 +214,7 @@ namespace Logic.Managers
             }
             catch
             {
-                return Task.CompletedTask;
+                return default;
             }
 
             if (context == null)
@@ -237,7 +238,42 @@ namespace Logic.Managers
             userEntity.LastCheck = DateTime.Now;
             context.SaveChanges();
             Console.WriteLine($"{GetType()}.{nameof(UpdateUserInfo)} completed");
-            return Task.CompletedTask;
+            return userEntity.Id;
+        }
+
+
+        public long UpdateGroupInfo(long groupId, ApplicationContext context = null)
+        {
+            if (context == null)
+            {
+                context = new ApplicationContext(_contextService.Options);
+            }
+
+            Group group;
+            try
+            {
+                group = _vkApiService.GetGroup(new List<string> {$"{Math.Abs(groupId)}"});
+            }
+            catch
+            {
+                return 0;
+            }
+
+            var entityGroup = context.UserGroups.FirstOrDefault(g => g.ExternalId == group.Id);
+            if (entityGroup == null)
+            {
+                entityGroup = new VkUserGroup()
+                {
+                    Title = group.Name,
+                    ExternalId = group.Id,
+                    GroupType = group.Type == GroupType.Group ? 0 : 1,
+                    IsDeactivated = false
+                };
+                context.Add(entityGroup);
+                context.SaveChanges();
+            }
+
+            return entityGroup.Id;
         }
 
         public Task UpdateMessages()
@@ -249,6 +285,7 @@ namespace Logic.Managers
                 Console.WriteLine($"{GetType()}.{nameof(UpdateMessages)} getting dialog {dialog}");
                 _vkApiService.GetMessages(dialog);
             }
+
             Console.WriteLine($"{GetType()}.{nameof(UpdateMessages)} completed");
             return Task.CompletedTask;
         }
@@ -265,10 +302,52 @@ namespace Logic.Managers
 
         public Task UpdateWall(long id)
         {
-            var wallMessages = _vkApiService.GetWallMessage(id);
             var context = new ApplicationContext(_contextService.Options);
-            return Task.CompletedTask;
+            var wallOwnerId = id > 0
+                ? context.VkUsers.FirstOrDefault(u => u.ExternalId == id)?.Id
+                : context.UserGroups.FirstOrDefault(g => g.ExternalId == id)?.Id;
+            if (wallOwnerId == null)
+            {
+                wallOwnerId = id > 0 ? UpdateUserInfo(id,context) : UpdateGroupInfo(id, context);
+            }
 
+            var wallMessages = _vkApiService.GetWallMessage(id);
+
+            var contextCounter = 0;
+            foreach (var wallMessage in wallMessages)
+            {
+                var entityMessage =
+                    context.VkWallMessages.FirstOrDefault(m =>
+                        ((id > 0 && m.VkUserId == wallOwnerId) || (id < 0 && m.VkGroupId == wallOwnerId)) && m.ExternalId == wallMessage.Id);
+                if (entityMessage != null)
+                {
+                    continue;
+                }
+
+                entityMessage = new VkWallMessage()
+                {
+                    Text = wallMessage.Text,
+                    ExternalId = wallMessage?.Id ?? 0,
+                    LikesCount = wallMessage.Likes.Count,
+                    RepostsCount = wallMessage.Reposts.Count,
+                    AttachmentsCount = wallMessage.Attachments.Count,
+                    CommentsCount = wallMessage.Comments?.Count ?? 0,
+                    ViewsCount = wallMessage.Views?.Count ?? 0,
+                    VkUserId = id > 0? wallOwnerId : null,
+                    VkGroupId =  id < 0? wallOwnerId : null,
+                    CreationTime = wallMessage.Date ?? DateTime.Now
+                };
+                context.Add(entityMessage);
+                if (++contextCounter % 200 == 0)
+                {
+                    context.SaveChanges();
+                    context.Dispose();
+                    context = new ApplicationContext(_contextService.Options);
+                }
+                
+            }
+            context.SaveChanges();
+            return Task.CompletedTask;
         }
     }
 }

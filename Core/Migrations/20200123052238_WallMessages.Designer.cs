@@ -3,15 +3,17 @@ using System;
 using Core.DataContext;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 namespace Core.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20200123052238_WallMessages")]
+    partial class WallMessages
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -160,19 +162,10 @@ namespace Core.Migrations
                     b.Property<long?>("AuthorUserId")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("CommentsCount")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime>("CreationTime")
-                        .HasColumnType("timestamp without time zone");
-
                     b.Property<long>("ExternalId")
                         .HasColumnType("bigint");
 
                     b.Property<int>("LikesCount")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("RepostsCount")
                         .HasColumnType("integer");
 
                     b.Property<string>("Text")
@@ -182,17 +175,12 @@ namespace Core.Migrations
                     b.Property<int>("ViewsCount")
                         .HasColumnType("integer");
 
-                    b.Property<long?>("VkGroupId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("VkUserId")
+                    b.Property<long>("VkUserId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
 
                     b.HasIndex("AuthorUserId");
-
-                    b.HasIndex("VkGroupId");
 
                     b.HasIndex("VkUserId");
 
@@ -244,13 +232,11 @@ namespace Core.Migrations
                         .WithMany()
                         .HasForeignKey("AuthorUserId");
 
-                    b.HasOne("Core.Entity.VkUserGroup", "UserGroup")
-                        .WithMany()
-                        .HasForeignKey("VkGroupId");
-
                     b.HasOne("Core.Entity.VkUser", "VkUser")
                         .WithMany()
-                        .HasForeignKey("VkUserId");
+                        .HasForeignKey("VkUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

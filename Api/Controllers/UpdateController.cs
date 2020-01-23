@@ -34,7 +34,7 @@ namespace Api.Controllers
         /// </summary>
         /// <param name="id">Идентификатор пользователя в ВК</param>
         [HttpPost("userinfo")]
-        public Task UpdateUserInfo(long id) => _updateManager.UpdateUserInfo(id);
+        public JsonResult UpdateUserInfo(long id) => new JsonResult(_updateManager.UpdateUserInfo(id));
 
         /// <summary>
         /// Обновляет информацию о группах друзей
