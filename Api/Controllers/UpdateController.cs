@@ -64,7 +64,14 @@ namespace Api.Controllers
         [HttpPost("video")]
         public Task UpdateVideo(long id) => _updateManager.UpdateVideo(id);
 
+        /// <summary>
+        /// Обновляет информацию о группе
+        /// </summary>
+        /// <param name="id">Идентификатор группы в ВК</param>
+        [HttpPost("group")]
+        public JsonResult UpdateGroup([FromBody] GroupUpdateDto dto) => new JsonResult(_updateManager.UpdateGroupInfo(dto));
+        
         [HttpPost("wall")]
-        public Task UpdateWall(long id) => _updateManager.UpdateWall(id);
+        public Task UpdateWall([FromBody] WallUpdateDto dto) => _updateManager.UpdateWall(dto);
     }
 }

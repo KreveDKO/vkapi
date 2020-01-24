@@ -1,8 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Core.DataContext;
-using Logic.Managers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using VkNet;
@@ -11,7 +11,6 @@ using VkNet.Enums.Filters;
 using VkNet.Enums.SafetyEnums;
 using VkNet.Model;
 using VkNet.Model.Attachments;
-using VkNet.Model.GroupUpdate;
 using VkNet.Model.RequestParams;
 using VkNet.Utils;
 
@@ -22,7 +21,7 @@ namespace Logic.Services
         private VkApi _vkApi;
         private MessageService _messageService;
         private DataContextService _contextService;
-        
+
         public VkApiService(IConfiguration config, MessageService messageService, DataContextService contextService)
         {
             _messageService = messageService;
@@ -43,7 +42,7 @@ namespace Logic.Services
             _contextService = contextService;
         }
 
-        
+
         private bool CheckTotalCount(long userId, uint count)
         {
             bool result;
@@ -51,9 +50,10 @@ namespace Logic.Services
             {
                 result = context.VkMessages.Count(m => m.VkUser.ExternalId == userId) == count;
             }
+
             return result;
         }
-        
+
         public VkCollection<User> GetFriends(long? userId = null)
         {
             var friendsGetParams = new FriendsGetParams
@@ -122,6 +122,7 @@ namespace Logic.Services
                 @params.Offset += 200;
                 dialogs = _vkApi.Messages.GetConversations(@params);
             }
+
             Debug.WriteLine($"{GetType()}.{nameof(GetDialogs)} completed");
             return result;
         }
@@ -136,12 +137,39 @@ namespace Logic.Services
             }
             catch
             {
-                
             }
 
             return result;
         }
-        
+
+        public List<User> GetGroupMembers(string id, long offset = 0)
+        {
+            var result = new List<User>();
+            var paramas = new GroupsGetMembersParams()
+            {
+                GroupId = id,
+                Offset = offset,
+                Fields = UsersFields.All
+            };
+            var response = _vkApi.Groups.GetMembers(paramas);
+            while (response?.Any() ?? false)
+            {
+                result.AddRange(response.ToList());
+                paramas.Offset += 1000;
+                try
+                {
+                    Console.WriteLine(paramas.Offset);
+                    response = _vkApi.Groups.GetMembers(paramas);
+                }
+                catch
+                {
+                    response = null;
+                }
+            }
+
+            return result;
+        }
+
         public List<Group> GetGroups(long userId)
         {
             var result = new List<Group>();
@@ -163,23 +191,31 @@ namespace Logic.Services
             return result;
         }
 
-        public List<Post> GetWallMessage(long userId,ulong offset = 0, int limit = 0)
+        public List<Post> GetWallMessage(long userId, ulong offset = 0, int limit = 0)
         {
             ;
-            var wallGetParams = new WallGetParams()
+            var wallGetParams = new WallGetParams
             {
                 OwnerId = userId,
                 Count = 100,
-                Offset =  offset,
+                Offset = offset,
                 Fields = WallFilter.All
             };
             var response = _vkApi.Wall.Get(wallGetParams);
             var result = new List<Post>();
-            while (response.WallPosts.Any() && (limit == 0 || result.Count < limit))
+            while ((response?.WallPosts?.Any() ?? false) && (limit == 0 || result.Count < limit))
             {
                 result.AddRange(response.WallPosts);
                 wallGetParams.Offset += 100;
-                response = _vkApi.Wall.Get(wallGetParams);
+                try
+                {
+                    Console.WriteLine(result.Count);
+                    response = _vkApi.Wall.Get(wallGetParams);
+                }
+                catch
+                {
+                    response = null;
+                }
             }
 
             return result;

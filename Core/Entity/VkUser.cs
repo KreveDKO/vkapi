@@ -11,5 +11,13 @@ namespace Core.Entity
         public long ExternalId { get; set; }
         public DateTime LastCheck { get; set; }
 
+        public int? BirthDay { get; set; }
+
+        public int? BirthMonth { get; set; }
+
+        public int? BirthYear { get; set; }
+
+
+
     }
 }
