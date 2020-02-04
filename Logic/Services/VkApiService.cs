@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Core.DataContext;
+using Logic.Interfaces.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using VkNet;
@@ -16,13 +17,13 @@ using VkNet.Utils;
 
 namespace Logic.Services
 {
-    public class VkApiService
+    public class VkApiService : IVkApiService
     {
         private VkApi _vkApi;
-        private MessageService _messageService;
+        private IMessageService _messageService;
         private DataContextService _contextService;
 
-        public VkApiService(IConfiguration config, MessageService messageService, DataContextService contextService)
+        public VkApiService(IConfiguration config, IMessageService messageService, DataContextService contextService)
         {
             _messageService = messageService;
             ulong.TryParse(config["AppId"], out var appId);
@@ -66,14 +67,14 @@ namespace Logic.Services
             return _vkApi.Friends.Get(friendsGetParams);
         }
 
-        public long? GetCurrentId => _vkApi.UserId;
+        public long? GetCurrentId() => _vkApi.UserId;
 
-        public User GetUser(long? userId) => _vkApi.Users.Get(new List<long> {userId ?? GetCurrentId ?? 0},
+        public User GetUser(long? userId) => _vkApi.Users.Get(new List<long> {userId ?? GetCurrentId() ?? 0},
                 ProfileFields.FirstName | ProfileFields.PhotoMaxOrig | ProfileFields.LastName | ProfileFields.Photo50)
             .FirstOrDefault();
 
 
-        public List<Message> GetMessages(long userId)
+        public IEnumerable<Message> GetMessages(long userId)
         {
             Debug.WriteLine($"{GetType()}.{nameof(GetMessages)} started");
             var result = new List<Message>();
@@ -105,7 +106,7 @@ namespace Logic.Services
         }
 
 
-        public List<long> GetDialogs(ulong offset = 0)
+        public IEnumerable<long> GetDialogs(ulong offset = 0)
         {
             Debug.WriteLine($"{GetType()}.{nameof(GetDialogs)} started");
             var result = new List<long>();
@@ -142,7 +143,7 @@ namespace Logic.Services
             return result;
         }
 
-        public List<User> GetGroupMembers(string id, long offset = 0)
+        public IEnumerable<User> GetGroupMembers(string id, long offset = 0)
         {
             var result = new List<User>();
             var paramas = new GroupsGetMembersParams()
@@ -170,7 +171,7 @@ namespace Logic.Services
             return result;
         }
 
-        public List<Group> GetGroups(long userId)
+        public IEnumerable<Group> GetGroups(long userId)
         {
             var result = new List<Group>();
             try
@@ -191,7 +192,7 @@ namespace Logic.Services
             return result;
         }
 
-        public List<Post> GetWallMessage(long userId, ulong offset = 0, int limit = 0)
+        public IEnumerable<Post> GetWallMessage(long userId, ulong offset = 0, int limit = 0)
         {
             ;
             var wallGetParams = new WallGetParams
@@ -219,6 +220,29 @@ namespace Logic.Services
             }
 
             return result;
+        }
+
+        public IEnumerable<Audio> GetAudios(long userId, ulong offset = 0)
+        {
+            var result = new List<Audio>();
+            var audioGetParams = new AudioGetParams()
+            {
+                OwnerId = userId,
+                Count = 6000,
+                Offset = 0
+                
+            };
+            var collection = _vkApi.Audio.Get(audioGetParams);
+            while (collection.Any())
+            {
+                result.AddRange(collection);
+                audioGetParams.Offset += collection.Count;
+                collection = _vkApi.Audio.Get(audioGetParams);
+            }
+
+
+            return result;
+
         }
     }
 }

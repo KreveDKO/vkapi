@@ -2,11 +2,12 @@
 using System.Linq;
 using Core.DataContext;
 using Core.Entity;
+using Logic.Interfaces.Services;
 using VkNet.Model;
 
 namespace Logic.Services
 {
-    public class FriendsService
+    public class FriendsService : IFriendsService
     {
         public IQueryable<FriendsUserToUser> GetRemovedUsers(ApplicationContext context, long userId,
             List<User> users)

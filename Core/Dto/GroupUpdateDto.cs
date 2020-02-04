@@ -1,7 +1,6 @@
 ﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 
-namespace Logic.Dto
+namespace Core.Dto
 {
     public class GroupUpdateDto
     {

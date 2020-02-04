@@ -1,5 +1,6 @@
 ﻿using System.Threading.Tasks;
-using Logic.Dto;
+using Core.Dto;
+using Logic.Interfaces.Managers;
 using Logic.Managers;
 using Microsoft.AspNetCore.Mvc;
 
@@ -8,9 +9,9 @@ namespace Api.Controllers
     [Route("/api/[controller]")]
     public class UpdateController : Controller
     {
-        private readonly UpdateManager _updateManager;
+        private readonly IUpdateManager _updateManager;
 
-        public UpdateController(UpdateManager updateManager)
+        public UpdateController(IUpdateManager updateManager)
         {
             _updateManager = updateManager;
         }
@@ -49,6 +50,9 @@ namespace Api.Controllers
         [HttpPost("messages")]
         public Task UpdateMessages() => _updateManager.UpdateMessages();
 
+
+        [HttpPost("friendsaudio")]
+        public Task UpdateFriendsAudio() => _updateManager.UpdateFriendsAudio();
         
         /// <summary>
         /// Обновляет аудиозаписи пользователя

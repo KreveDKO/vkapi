@@ -22,5 +22,15 @@ namespace Core.DataContext
         public DbSet<VkUserGroup> UserGroups { get; set; }
         public DbSet<UserToUserGroup> UserToUserGroup { get; set; }
 
+        public DbSet<VkAudio> VkAudio { get; set; }
+
+        public DbSet<VkAudioArtist> VkAudioArtist { get; set; }
+
+        public DbSet<VkAudioToArtist> VkAudioToArtist { get; set; }
+        
+        public DbSet<VkAudioToUser> VkAudioToUser { get; set; }
+        
+        
+
     }
 }

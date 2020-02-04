@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 
-namespace Logic.Dto
+namespace Core.Dto
 {
     public class WallUpdateDto
     {

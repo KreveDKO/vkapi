@@ -2,11 +2,12 @@
 using System.Linq;
 using Core.DataContext;
 using Core.Entity;
+using Logic.Interfaces.Services;
 using VkNet.Model;
 
 namespace Logic.Services
 {
-    public class MessageService
+    public class MessageService : IMessageService
     {
         private readonly DataContextService _contextService;
 

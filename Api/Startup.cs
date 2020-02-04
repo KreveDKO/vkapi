@@ -1,4 +1,6 @@
 ﻿using Core.DataContext;
+using Logic.Interfaces.Managers;
+using Logic.Interfaces.Services;
 using Logic.Managers;
 using Logic.Services;
 using Microsoft.AspNetCore.Builder;
@@ -29,10 +31,10 @@ namespace Api
                     options.CheckConsentNeeded = context => true;
                     options.MinimumSameSitePolicy = SameSiteMode.None;
                 })
-                .AddTransient<VkApiService>()
-                .AddTransient<MessageService>()
-                .AddTransient<UpdateManager>()
-                .AddTransient<FriendsService>()
+                .AddTransient<IVkApiService,VkApiService>()
+                .AddTransient<IMessageService,MessageService>()
+                .AddTransient<IUpdateManager,UpdateManager>()
+                .AddTransient<IFriendsService,FriendsService>()
                 .AddTransient<DataContextService>();
             services.AddControllersWithViews();
 

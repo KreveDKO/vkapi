@@ -4,22 +4,27 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Core.DataContext;
+using Core.Dto;
 using Core.Entity;
-using Logic.Dto;
+using Logic.Interfaces.Managers;
+using Logic.Interfaces.Services;
 using Logic.Services;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using VkNet.Enums;
 using VkNet.Enums.SafetyEnums;
 using VkNet.Model;
+using VkNet.Model.Attachments;
 
 namespace Logic.Managers
 {
-    public class UpdateManager
+    public class UpdateManager : IUpdateManager
     {
-        private readonly VkApiService _vkApiService;
-        private readonly FriendsService _friendsService;
+        private readonly IVkApiService _vkApiService;
+        private readonly IFriendsService _friendsService;
         private readonly DataContextService _contextService;
 
-        public UpdateManager(VkApiService vkApiService, FriendsService friendsService,
+        public UpdateManager(IVkApiService vkApiService, IFriendsService friendsService,
             DataContextService contextService)
         {
             _vkApiService = vkApiService;
@@ -37,7 +42,7 @@ namespace Logic.Managers
 
             if (dto.UserId == null)
             {
-                dto.UserId = _vkApiService.GetCurrentId;
+                dto.UserId = _vkApiService.GetCurrentId();
             }
 
             //Находим текущего пользователя и обновляем его связи
@@ -147,7 +152,7 @@ namespace Logic.Managers
         public Task UpdateGroupsList(long userId, ApplicationContext context = null)
         {
             Console.WriteLine($"{GetType()}.{nameof(UpdateGroupsList)} completed");
-            List<Group> groups;
+            IEnumerable<Group> groups;
             try
             {
                 groups = _vkApiService.GetGroups(userId);
@@ -387,9 +392,134 @@ namespace Logic.Managers
             return Task.CompletedTask;
         }
 
+        public async Task UpdateFriendsAudio()
+        {
+            var friends = _vkApiService.GetFriends();
+            foreach (var friend in friends)
+            {
+                Console.WriteLine($"({friend.Id}) {friend.FirstName} {friend.LastName}");
+                await using var context =  new ApplicationContext(_contextService.Options);;
+                await UpdateAudio(friend.Id,context);
+            }
+
+        }
+
         public Task UpdateAudio(long id, ApplicationContext context = null)
         {
-            throw new NotImplementedException();
+            if (context == null)
+            {
+                context = new ApplicationContext(_contextService.Options);
+            }
+
+
+            IEnumerable<Audio> audios;
+            try
+            {
+                audios = _vkApiService.GetAudios(id);
+            }
+            catch
+            {
+                return Task.CompletedTask;
+            }
+            foreach (var audio in audios)
+            {
+                VkAudio entityAudio = null;
+                if (audio.Id != null)
+                {
+                    entityAudio = context.VkAudio.FirstOrDefault(a => a.Title == audio.Title && a.ExternalId == audio.Id);
+                }
+
+                if (entityAudio == null)
+                {
+                    entityAudio = new VkAudio()
+                    {
+                        ExternalId = audio.Id,
+                        Title = audio.Title
+                        
+                    };
+                    context.Add(entityAudio);
+                    context.SaveChanges();
+                }
+
+                var artists = new List<VkAudioArtist>(); 
+                if (audio.MainArtists?.Any() ?? false) 
+                {
+                    foreach (var audioMainArtist in audio.MainArtists)
+                    {
+                        var entityArtist = context.VkAudioArtist.FirstOrDefault(a => a.ExternalId == audioMainArtist.Id);
+                        if (entityArtist == null)
+                        {
+                            entityArtist = new VkAudioArtist()
+                            {
+                                ExternalId = audioMainArtist.Id,
+                                Title = audioMainArtist.Name
+                            };
+                            
+                        }
+                        artists.Add(entityArtist);
+                    }
+                }
+                else
+                {
+                    var entityArtist = context.VkAudioArtist.FirstOrDefault(a => a.Title == audio.Artist);
+                    if (entityArtist == null)
+                    {
+                        entityArtist = new VkAudioArtist()
+                        {
+                            Title = audio.Artist,
+                            ExternalId = null
+                        };
+                    }
+                    artists.Add(entityArtist);
+                }
+                context.AddRange(artists.Where(a => a.Id == 0));
+                context.SaveChanges();
+                foreach (var audioArtist in artists)
+                {
+                    var artistToAudio = context.VkAudioToArtist.FirstOrDefault(m2m =>
+                        m2m.VkAudioId == entityAudio.Id && m2m.VkAudioArtistsId == audioArtist.Id);
+                    if (artistToAudio == null)
+                    {
+                        context.VkAudioToArtist.Add(new VkAudioToArtist()
+                        {
+                            VkAudioId = entityAudio.Id,
+                            VkAudioArtistsId = audioArtist.Id
+                        });
+                        
+                    }
+                    else
+                    {
+                        
+                    }
+                }
+
+                context.SaveChanges();
+
+                var entityUser = context.VkUsers.FirstOrDefault(u => u.ExternalId == id);
+                if (entityUser == null)
+                {
+                    entityUser = new VkUser()
+                    {
+                        ExternalId = id
+                    };
+                    context.Add(entityUser);
+                    context.SaveChanges();
+                }
+
+                var audioToUser = context.VkAudioToUser.FirstOrDefault(m2m =>
+                    m2m.VkAudioId == entityAudio.Id && m2m.VkUserId == entityUser.Id);
+                if (audioToUser == null)
+                {
+                    context.VkAudioToUser.Add(new VkAudioToUser()
+                    {
+                        VkAudioId = entityAudio.Id,
+                        VkUserId = entityUser.Id
+                    });
+                    context.SaveChanges();
+                }
+
+            }
+            return Task.CompletedTask;;
         }
 
         public Task UpdateVideo(long id, ApplicationContext context = null)
