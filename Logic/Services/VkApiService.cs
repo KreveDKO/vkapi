@@ -222,14 +222,14 @@ namespace Logic.Services
             return result;
         }
 
-        public IEnumerable<Audio> GetAudios(long userId, ulong offset = 0)
+        public IEnumerable<Audio> GetAudios(long userId, long offset = 0)
         {
             var result = new List<Audio>();
             var audioGetParams = new AudioGetParams()
             {
                 OwnerId = userId,
                 Count = 6000,
-                Offset = 0
+                Offset = offset
                 
             };
             var collection = _vkApi.Audio.Get(audioGetParams);
@@ -243,6 +243,15 @@ namespace Logic.Services
 
             return result;
 
+        }
+
+        public void SendWallMessage(long wallId, string message)
+        {
+            _vkApi.Wall.Post(new WallPostParams
+            {
+                OwnerId = wallId,
+                Message = message
+            });
         }
     }
 }

@@ -25,6 +25,8 @@ namespace Logic.Interfaces.Services
 
         long? GetCurrentId();
 
-        IEnumerable<Audio> GetAudios(long userId, ulong offset = 0);
+        IEnumerable<Audio> GetAudios(long userId, long offset = 0);
+
+        void SendWallMessage(long wallId, string message);
     }
 }

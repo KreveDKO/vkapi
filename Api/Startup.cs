@@ -35,6 +35,7 @@ namespace Api
                 .AddTransient<IMessageService,MessageService>()
                 .AddTransient<IUpdateManager,UpdateManager>()
                 .AddTransient<IFriendsService,FriendsService>()
+                .AddTransient<IActionManager, ActionManager>()
                 .AddTransient<DataContextService>();
             services.AddControllersWithViews();
 
